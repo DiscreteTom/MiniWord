@@ -65,9 +65,12 @@ public:
 		bool overflow;
 
 	public:
+		iterator()
+		  :m_parentNode(NULL), m_parentHeap(NULL), m_index(-1), overflow(true){}//default ctor set iterator overflow
 		iterator(Node * parentNode, Heap * parentHeap, int index)
 		  :m_parentNode(parentNode), m_parentHeap(parentHeap), m_index(index), overflow(false){}
 
+		//inline methods
 		bool isOverFlow() const {return overflow;}
 		void clear() {overflow = false;}
 
@@ -81,6 +84,7 @@ public:
 		const iterator & operator-(int n) const ;
 		bool operator==(const iterator & another) const ;
 		int operator-(const iterator & another) const ;//return width unit
+		const iterator & operator=(const iterator & another);
 	};
 
 	//=========== about iterator ===========

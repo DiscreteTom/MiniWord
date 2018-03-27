@@ -6,7 +6,89 @@ Data::Data(QObject *parent) : QObject(parent)
 
 }
 
+Data::iterator Data::begin()
+{
+	return iteratorAt(0, 0);
+}
+
 Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
+{
+	//judge overflow
+	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
+		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
+		return iterator();
+	}
+	//get node
+	auto p_node = firstNode;
+	while (parentNodeIndex){
+		p_node = p_node->nextNode();
+		--parentNodeIndex;
+	}
+	//judge overflow
+	if (indexInNode > p_node->charNum() - 1 || indexInNode < 0){
+		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
+		return iterator();
+	}
+	auto p_heap = p_node->firstHeap();
+	while (indexInNode > p_heap->charNum() - 1 && p_heap->nextHeap()){
+		indexInNode -= p_heap->charNum();
+		p_heap = p_heap->nextHeap();
+	}
+	if (indexInNode > p_heap->charNum() || indexInNode < 0){//overflow
+		return iterator();
+	}
+	return iterator(p_node, p_heap, indexInNode);
+}
+
+Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
+{
+	//judge overflow
+	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
+		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
+		return iterator();
+	}
+	//get node
+	auto p_node = firstNode;
+	while (parentNodeIndex){
+		p_node = p_node->nextNode();
+		--parentNodeIndex;
+	}
+	//judge overflow
+	if (parentHeapIndex > p_node->heapNum() - 1 || parentHeapIndex < 0){
+		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 3"));
+		return iterator();
+	}
+	//get heap
+	auto p_heap = p_node->firstHeap();
+	while (parentHeapIndex > p_heap->charNum() - 1){
+		parentHeapIndex -= p_heap->charNum();
+		p_heap = p_heap->nextHeap();
+	}
+	//final check
+	if (indexInHeap > p_heap->charNum() - 1 || indexInHeap < 0){
+		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
+		return iterator();
+	}
+
+	return iterator(p_node, p_heap, indexInHeap);
+}
+
+const Data::Node & Data::operator[](int n)
+{
+	if (n > nodeNum - 1 || n < 0){
+		QMessageBox::warning(this->parent(), tr("Error"), tr("Try to get a non-existent Node"));
+	} else {//n is legal
+		auto p = firstNode;
+		while (n){
+			p = p->nextp;
+			--n;
+		}
+		return *p;
+	}
+}
+
+
+void Data::iterator::locate(int parentNodeIndex, int indexInNode)
 {
 	//judge overflow
 	if (parentNodeIndex > nodeNum - 1){
@@ -27,53 +109,11 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 		indexInNode -= p_heap->charNum();
 		p_heap = p_heap->nextHeap();
 	}
-	return iterator(p_node, p_heap, indexInNode);
+
+	m_parentNode = p_node;
+	m_parentHeap = p_heap;
+	m_index = indexInNode;
 }
-
-Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
-{
-	//judge overflow
-	if (parentNodeIndex > nodeNum - 1){
-		QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
-	}
-	//get node
-	auto p_node = firstNode;
-	while (parentNodeIndex){
-		p_node = p_node->nextNode();
-		--parentNodeIndex;
-	}
-	//judge overflow
-	if (parentHeapIndex > p_node->heapNum() - 1){
-		QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 3"));
-	}
-	//get heap
-	auto p_heap = p_node->firstHeap();
-	while (parentHeapIndex > p_heap->charNum() - 1){
-		parentHeapIndex -= p_heap->charNum();
-		p_heap = p_heap->nextHeap();
-	}
-	//final check
-	if (indexInHeap > p_heap->charNum() - 1){
-		QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
-	}
-
-	return iterator(p_node, p_heap, indexInHeap);
-}
-
-const Data::Node & Data::operator[](int n)
-{
-	if (n > nodeNum - 1 || n < 0){
-		QMessageBox::warning(this->parent(), tr("Error"), tr("Try to get a non-existent Node"));
-	} else {//n is legal
-		auto p = firstNode;
-		while (n){
-			p = p->nextp;
-			--n;
-		}
-		return *p;
-	}
-}
-
 
 QChar Data::iterator::operator*() const
 {
@@ -152,6 +192,15 @@ const Data::iterator &Data::iterator::operator-(int n) const
 		--n;
 	}
 	return t;
+}
+
+const Data::iterator &Data::iterator::operator=(const Data::iterator & another)
+{
+	m_parentNode = another.m_parentNode;
+	m_parentHeap = another.m_parentHeap;
+	m_index = another.m_index;
+	overflow = another.overflow;
+	return *this;
 }
 
 bool Data::iterator::operator==(const Data::iterator & another) const
