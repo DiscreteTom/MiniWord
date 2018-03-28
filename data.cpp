@@ -87,6 +87,43 @@ const Data::Node & Data::operator[](int n)
 	}
 }
 
+void Data::add(const Data::iterator & locate, const QString & str)
+{
+	//todo
+}
+
+void Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
+{
+	//todo
+}
+
+void Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
+{
+	//todo
+}
+
+Data::iterator Data::find(const Data::iterator & startLocate, const QString & str)
+{
+	//if can't find return startLocate and give QMessageBox::warning
+	//todo
+	return startLocate;
+}
+
+void Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
+{
+	//todo
+}
+
+void Data::copy(const Data::iterator & startLocate, const Data::iterator & endLocate)
+{
+	//todo
+}
+
+void Data::paste(const Data::iterator & locate)
+{
+	//todo
+}
+
 QChar Data::iterator::operator*() const
 {
 	return m_parentHeap->operator [](m_index);

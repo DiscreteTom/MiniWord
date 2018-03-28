@@ -55,8 +55,17 @@ void MainWindow::initRightMenu()
 	rightMenu->addAction(delAction);
 	rightMenu->addSeparator();
 	rightMenu->addAction(seleteAllAction);
+}
 
-	//todo:connect right click and menu->show
+void MainWindow::resetRightMenu()
+{
+	//activate all methods
+	undoAction->setDisabled(false);
+	cutAction->setDisabled(false);
+	copyAction->setDisabled(false);
+	pasteAction->setDisabled(false);
+	delAction->setDisabled(false);
+	seleteAllAction->setDisabled(false);
 }
 
 void MainWindow::newFile()
@@ -155,12 +164,58 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::keyPressEvent(QKeyEvent * ev)
 {
-
+	switch (ev->key()){
+	case Qt::Key_Backspace :
+		data.del(PosCur.DataPos, PosPre.DataPos);
+		break;
+	case Qt::Key_Enter :
+	case Qt::Key_Return :
+		data.add(PosCur.DataPos, tr("\n"));
+		break;
+	case Qt::Key_Delete :
+		data.del(PosCur.DataPos, PosPre.DataPos, true);
+		break;
+	case Qt::UpArrow :
+		//todo
+		break;
+	case Qt::DownArrow :
+		//todo
+		break;
+	case Qt::LeftArrow :
+		//todo
+		break;
+	case Qt::RightArrow :
+		//todo
+		break;
+	case Qt::Key_Home :
+		//todo
+		break;
+	case Qt::Key_End :
+		//todo
+		break;
+	default :
+		data.add(PosCur.DataPos, ev->text());
+	}
 }
 
 void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 {
+	data.add(PosCur.DataPos, ev->commitString());
+}
 
+void MainWindow::mousePressEvent(QMouseEvent * ev)
+{
+	if (ev->button() == Qt::RightButton){//show right click menu
+		//judge function state
+		if (PosCur.DataPos == PosPre.DataPos){
+			cutAction->setDisabled(true);
+			copyAction->setDisabled(true);
+			delAction->setDisabled(true);
+		}
+		//todo if UndoStack is empty then disable undo action
+		rightMenu->exec(ev->pos());
+		resetRightMenu();
+	}
 }
 
 void MainWindow::paintEvent(QPaintEvent *ev)
@@ -224,7 +279,7 @@ void MainWindow::on_action_Paste_triggered()
 
 void MainWindow::on_action_Delete_triggered()
 {
-	//todo
+	data.del(PosCur.DataPos, PosPre.DataPos);
 }
 
 void MainWindow::on_action_Find_triggered()
@@ -234,7 +289,7 @@ void MainWindow::on_action_Find_triggered()
 
 void MainWindow::on_action_FindNext_triggered()
 {
-	//todo
+	PosCur.DataPos = data.find(PosCur.DataPos, replaceDlg->findLeText());
 }
 
 void MainWindow::on_action_Replace_triggered()

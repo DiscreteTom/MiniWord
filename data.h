@@ -87,9 +87,12 @@ public:
 
 	//========== about text edit ========
 	void add(const iterator & locate, const QString & str);
-	void del(const iterator & startLocate, const iterator & endLocate);
+	void del(const iterator & startLocate, const iterator & endLocate, bool hind = false);
 	void edit(const iterator & startLocate, const iterator & endLocate, const QString & str);
 	iterator find(const iterator & startLocate, const QString & str);
+	void cut(const iterator & startLocate, const iterator & endLocate);
+	void copy(const iterator & startLocate, const iterator & endLocate);
+	void paste(const iterator & locate);//get string from system clipboard
 signals:
 
 public slots:

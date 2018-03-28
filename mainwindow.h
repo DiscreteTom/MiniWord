@@ -9,6 +9,7 @@
 #include <QKeyEvent>
 #include <QFocusEvent>
 #include <QInputMethodEvent>
+#include <QMouseEvent>
 #include <QPainter>
 #include "replacedlg.h"
 #include "data.h"
@@ -100,6 +101,7 @@ private:
 
 	//-------- initialize Right Click Menu ---------
 	void initRightMenu();
+	void resetRightMenu();
 
 	//------------ about file ------------
 	void newFile();
@@ -113,7 +115,8 @@ protected:
 	void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
 	void keyPressEvent(QKeyEvent * ev);
 	void inputMethodEvent(QInputMethodEvent * ev);
-    void paintEvent(QPaintEvent * ev);
+	void mousePressEvent(QMouseEvent * ev);
+	void paintEvent(QPaintEvent * ev);
 };
 
 #endif // MAINWINDOW_H

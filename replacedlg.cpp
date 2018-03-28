@@ -15,6 +15,16 @@ ReplaceDlg::~ReplaceDlg()
 	delete ui;
 }
 
+QString ReplaceDlg::findLeText() const
+{
+	return ui->findLe->text();
+}
+
+QString ReplaceDlg::replaceLeText() const
+{
+	return ui->replaceLe->text();
+}
+
 void ReplaceDlg::on_cancelBtn_clicked()
 {
 	this->hide();
