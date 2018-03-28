@@ -5,13 +5,12 @@
 #include <QFile>
 #include <QPushButton>
 #include <QTextStream>
-
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-
+    showMaximized();
 	//================== about file =================
 	isUntitled = true;
 	shouldSave = false;
@@ -162,6 +161,12 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 {
 
+}
+
+void MainWindow::paintEvent(QPaintEvent *ev)
+{
+    QPainter op(this);
+    op.fillRect(100,100,200,200,Qt::green);
 }
 
 void MainWindow::on_action_New_triggered()

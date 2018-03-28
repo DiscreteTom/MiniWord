@@ -9,12 +9,19 @@
 #include <QKeyEvent>
 #include <QFocusEvent>
 #include <QInputMethodEvent>
+#include <QPainter>
 #include "replacedlg.h"
 #include "data.h"
 
 namespace Ui {
 class MainWindow;
 }
+
+struct Pos{
+    int ShowPosX;
+    int ShowPosY;
+    Data::iterator DataPos;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -44,6 +51,12 @@ private slots:
 	void on_action_FindNext_triggered();
 	void on_action_Replace_triggered();
 private:
+    enum ShowType{
+        UpdateALLScreen=1,
+        UpdateCursor,
+        UpdateBuleArea,
+        UpdateBehind
+    };
 	Ui::MainWindow *ui;
 
 	//=================== Object ===============================
@@ -70,6 +83,19 @@ private:
 	//------------ data ---------
 	Data data;
 
+    //------------ show ---------
+    Pos PosLeftUp;
+    Pos PosCur;
+    Pos PosPre;
+    ShowType MyShowType;
+
+    int DataTextHeight;
+    int DataTextTop;
+    int TextBoxHeight;
+    int TextBoxWidth;
+    int FontSizeW;
+    int FontSizeH;
+
 	//===================== Methods ========================
 
 	//-------- initialize Right Click Menu ---------
@@ -87,6 +113,7 @@ protected:
 	void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
 	void keyPressEvent(QKeyEvent * ev);
 	void inputMethodEvent(QInputMethodEvent * ev);
+    void paintEvent(QPaintEvent * ev);
 };
 
 #endif // MAINWINDOW_H
