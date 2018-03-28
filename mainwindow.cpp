@@ -23,6 +23,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//================== replace and find dialog ========
 	replaceDlg = new ReplaceDlg(this);
+
+	//================= input support ===========
+	setFocusPolicy(Qt::ClickFocus);
+	setAttribute(Qt::WA_InputMethodEnabled, true);
 }
 
 MainWindow::~MainWindow()
@@ -148,6 +152,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	} else {
 		event->ignore();//not close window
 	}
+}
+
+void MainWindow::keyPressEvent(QKeyEvent * ev)
+{
+
+}
+
+void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
+{
+
 }
 
 void MainWindow::on_action_New_triggered()

@@ -6,7 +6,11 @@
 #include <QAction>
 #include <QString>
 #include <QCloseEvent>
+#include <QKeyEvent>
+#include <QFocusEvent>
+#include <QInputMethodEvent>
 #include "replacedlg.h"
+#include "data.h"
 
 namespace Ui {
 class MainWindow;
@@ -63,6 +67,9 @@ private:
 	bool shouldSave;
 	QString curFile;
 
+	//------------ data ---------
+	Data data;
+
 	//===================== Methods ========================
 
 	//-------- initialize Right Click Menu ---------
@@ -78,6 +85,8 @@ private:
 
 protected:
 	void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
+	void keyPressEvent(QKeyEvent * ev);
+	void inputMethodEvent(QInputMethodEvent * ev);
 };
 
 #endif // MAINWINDOW_H

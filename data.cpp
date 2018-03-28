@@ -21,20 +21,20 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 	//get node
 	auto p_node = firstNode;
 	while (parentNodeIndex){
-		p_node = p_node->nextNode();
+		p_node = p_node->nextNode;
 		--parentNodeIndex;
 	}
 	//judge overflow
-	if (indexInNode > p_node->charNum() - 1 || indexInNode < 0){
+	if (indexInNode > p_node->charNum - 1 || indexInNode < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
 		return iterator();
 	}
-	auto p_heap = p_node->firstHeap();
-	while (indexInNode > p_heap->charNum() - 1 && p_heap->nextHeap()){
-		indexInNode -= p_heap->charNum();
-		p_heap = p_heap->nextHeap();
+	auto p_heap = p_node->firstHeap;
+	while (indexInNode > p_heap->charNum - 1 && p_heap->nextHeap){
+		indexInNode -= p_heap->charNum;
+		p_heap = p_heap->nextHeap;
 	}
-	if (indexInNode > p_heap->charNum() || indexInNode < 0){//overflow
+	if (indexInNode > p_heap->charNum || indexInNode < 0){//overflow
 		return iterator();
 	}
 	return iterator(p_node, p_heap, indexInNode);
@@ -50,22 +50,22 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int in
 	//get node
 	auto p_node = firstNode;
 	while (parentNodeIndex){
-		p_node = p_node->nextNode();
+		p_node = p_node->nextNode;
 		--parentNodeIndex;
 	}
 	//judge overflow
-	if (parentHeapIndex > p_node->heapNum() - 1 || parentHeapIndex < 0){
+	if (parentHeapIndex > p_node->heapNum - 1 || parentHeapIndex < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 3"));
 		return iterator();
 	}
 	//get heap
-	auto p_heap = p_node->firstHeap();
-	while (parentHeapIndex > p_heap->charNum() - 1){
-		parentHeapIndex -= p_heap->charNum();
-		p_heap = p_heap->nextHeap();
+	auto p_heap = p_node->firstHeap;
+	while (parentHeapIndex > p_heap->charNum - 1){
+		parentHeapIndex -= p_heap->charNum;
+		p_heap = p_heap->nextHeap;
 	}
 	//final check
-	if (indexInHeap > p_heap->charNum() - 1 || indexInHeap < 0){
+	if (indexInHeap > p_heap->charNum - 1 || indexInHeap < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
 		return iterator();
 	}
@@ -76,43 +76,15 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int in
 const Data::Node & Data::operator[](int n)
 {
 	if (n > nodeNum - 1 || n < 0){
-		QMessageBox::warning(this->parent(), tr("Error"), tr("Try to get a non-existent Node"));
+		//QMessageBox::warning(this->parent(), tr("Error"), tr("Try to get a non-existent Node"));
 	} else {//n is legal
 		auto p = firstNode;
 		while (n){
-			p = p->nextp;
+			p = p->nextNode;
 			--n;
 		}
 		return *p;
 	}
-}
-
-
-void Data::iterator::locate(int parentNodeIndex, int indexInNode)
-{
-	//judge overflow
-	if (parentNodeIndex > nodeNum - 1){
-		QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
-	}
-	//get node
-	auto p_node = firstNode;
-	while (parentNodeIndex){
-		p_node = p_node->nextNode();
-		--parentNodeIndex;
-	}
-	//judge overflow
-	if (indexInNode > p_node->charNum() - 1){
-		QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
-	}
-	auto p_heap = p_node->firstHeap();
-	while (indexInNode > p_heap->charNum() - 1){
-		indexInNode -= p_heap->charNum();
-		p_heap = p_heap->nextHeap();
-	}
-
-	m_parentNode = p_node;
-	m_parentHeap = p_heap;
-	m_index = indexInNode;
 }
 
 QChar Data::iterator::operator*() const
@@ -120,17 +92,17 @@ QChar Data::iterator::operator*() const
 	return m_parentHeap->operator [](m_index);
 }
 
-Data::iterator &Data::iterator::operator++()
+const Data::iterator &Data::iterator::operator++()
 {
 	++m_index;
-	if (m_index == m_parentHeap->charNum() - 1){//not int this heap
-		if (m_parentHeap->nextHeap()){//goto next heap
-			m_parentHeap = m_parentHeap->nextHeap();
+	if (m_index == m_parentHeap->charNum - 1){//not int this heap
+		if (m_parentHeap->nextHeap){//goto next heap
+			m_parentHeap = m_parentHeap->nextHeap;
 			m_index = 0;
 		} else {//no next heap
-			if (m_parentNode->nextNode()){//go next node
-				m_parentNode = m_parentNode->nextNode();
-				m_parentHeap = m_parentNode->firstHeap();
+			if (m_parentNode->nextNode){//go next node
+				m_parentNode = m_parentNode->nextNode;
+				m_parentHeap = m_parentNode->firstHeap;
 				m_index = 0;
 			} else {//no next node
 				overflow = true;
@@ -151,14 +123,14 @@ const Data::iterator &Data::iterator::operator--()
 {
 	--m_index;
 	if (m_index < 0){//not in this heap
-		if (m_parentHeap->preHeap()){//goto previous heap
-			m_parentHeap = m_parentHeap->preHeap();
-			m_index = m_parentHeap->charNum() - 1;
+		if (m_parentHeap->preHeap){//goto previous heap
+			m_parentHeap = m_parentHeap->preHeap;
+			m_index = m_parentHeap->charNum - 1;
 		} else {//no previous heap
-			if (m_parentNode->preNode()){//goto previous node
-				m_parentNode = m_parentNode->preNode();
+			if (m_parentNode->preNode){//goto previous node
+				m_parentNode = m_parentNode->preNode;
 				m_parentHeap = m_parentNode->lastHeap();
-				m_index = m_parentHeap->charNum() - 1;
+				m_index = m_parentHeap->charNum - 1;
 			} else {//no previous node
 				overflow = true;
 			}
@@ -208,12 +180,12 @@ bool Data::iterator::operator==(const Data::iterator & another) const
 	return m_parentNode == another.m_parentNode && m_parentHeap == another.m_parentHeap && m_index == another.m_index;
 }
 
-int Data::iterator::operator-(const Data::iterator & another)
+int Data::iterator::operator-(const Data::iterator & another) const
 {
 	int result = 0;
 	auto t = *this;
 	while (!(t.isOverFlow() || another == *this)){
-		if ((*t).unicode() >= 0x4e00 && (*t).unicode <= 0x9fa5){
+		if ((*t).unicode() >= 0x4e00 && (*t).unicode() <= 0x9fa5){
 			//chinese char
 			result +=2;
 		} else {
@@ -227,16 +199,16 @@ int Data::iterator::operator-(const Data::iterator & another)
 
 Data::Heap *Data::Node::lastHeap()
 {
-	auto p = m_firstHeap;
-	while (p->nextp){
-		p = p->nextp;
+	auto p = firstHeap;
+	while (p->nextHeap){
+		p = p->nextHeap;
 	}
 	return p;
 }
 
 QChar Data::Node::operator[](int n)
 {
-	if (n > m_charNum - 1){//not in this node
+	if (n > charNum - 1){//not in this node
 		/* ===== if not in this node, we shouldn't goto next node
 		if (nextp){//go to next node
 			return (*nextp)[n - charNum];
@@ -247,12 +219,12 @@ QChar Data::Node::operator[](int n)
 			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Node"));
 	} else {//in this node
 		/* ===== use a loop instead of resursion
-		return (*m_firstHeap)[n];
+		return (*firstHeap)[n];
 		   =====*/
-		auto heap = m_firstHeap;
-		while (n > heap->charNum() - 1){
-			n -= heap->charNum();
-			heap = heap->nextHeap();
+		auto heap = firstHeap;
+		while (n > heap->charNum - 1){
+			n -= heap->charNum;
+			heap = heap->nextHeap;
 		}
 		return heap->operator [](n);
 	}
@@ -260,9 +232,9 @@ QChar Data::Node::operator[](int n)
 
 QChar Data::Heap::operator[](int n)
 {
-	if (n > num - 1){//not in this heap
-		if (nextp){//goto next heap
-			return (*nextp)[n - num];
+	if (n > charNum - 1){//not in this heap
+		if (nextHeap){//goto next heap
+			return (*nextHeap)[n - charNum];
 		} else {//no next heap
 			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Heap"));
 		}

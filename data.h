@@ -12,37 +12,27 @@ class Data : public QObject
 private:
 	//============== private class declaration ===========
 	class Heap{
-	private:
-		QChar ch[100];
-		int num;//actual number of char(0-100)
-		Heap * prep;//pointer to the previous heap
-		Heap * nextp;//pointer to the next heap
-
 	public:
+		//variables
+		QChar ch[100];
+		int charNum;//actual number of char(0-100)
+		Heap * preHeap;//pointer to the previous heap
+		Heap * nextHeap;//pointer to the next heap
+
 		//operator overload
 		QChar operator[](int n);
-
-		int charNum() const {return num;}
-		Heap * nextHeap() {return nextp;}
-		Heap * preHeap() {return prep;}
 	};
 	class Node{
-	private:
-		Node * prep;//pointer to the previous node
-		Node * nextp;//pointer to the next node
-		Heap * m_firstHeap;
-		int m_charNum;//number of char in this node
-		int m_heapNum;
-
 	public:
-		Heap * lastHeap();
+		//variables
+		Node * preNode;//pointer to the previous node
+		Node * nextNode;//pointer to the next node
+		Heap * firstHeap;
+		int charNum;//number of char in this node
+		int heapNum;
 
-		//inline methods
-		Heap * firstHeap() {return m_firstHeap;}
-		Node * nextNode() {return nextp;}
-		Node * preNode() {return prep;}
-		int charNum() const {return m_charNum;}
-		int heapNum() const {return m_heapNum;}
+		//methods
+		Heap * lastHeap();
 
 		//------ operator overload ------
 		QChar operator[](int n);
