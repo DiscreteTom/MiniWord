@@ -63,6 +63,9 @@ public:
 		//inline methods
 		bool isOverFlow() const {return overflow;}
 		void clear() {overflow = false;}
+		Node * parentNode() const {return m_parentNode;}
+		Heap * parentHeap() const {return m_parentHeap;}
+		int index() const {return m_index;}
 
 		//----- operator overload -----
 		QChar operator*() const ;
