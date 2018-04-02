@@ -9,6 +9,12 @@ class Data : public QObject
 {
 	Q_OBJECT
 
+	static const int TABWIDTH = 4;
+
+public:
+	//iterator declare
+	class iterator;
+
 private:
 	//============== private class declaration ===========
 	class Heap{
@@ -28,14 +34,17 @@ private:
 		Node * preNode;//pointer to the previous node
 		Node * nextNode;//pointer to the next node
 		Heap * firstHeap;
-		int charNum;//number of char in this node
+		//int charNum;//number of char in this node
 		int heapNum;
+		int widthUnitNum;
 
 		//methods
+		int charNum();
 		Heap * lastHeap();
+		iterator begin();
 
 		//------ operator overload ------
-		QChar operator[](int n);
+		const Heap & operator[](int n);
 	};
 
 	//============== private variable =====================
@@ -60,6 +69,8 @@ public:
 		iterator(Node * parentNode, Heap * parentHeap, int index)
 		  :m_parentNode(parentNode), m_parentHeap(parentHeap), m_index(index), overflow(false){}
 
+		void move(int unitWidthCount, int windowUnitCount);//unitWidthCount can be minus
+
 		//inline methods
 		bool isOverFlow() const {return overflow;}
 		void clear() {overflow = false;}
@@ -78,6 +89,8 @@ public:
 		bool operator==(const iterator & another) const ;
 		int operator-(const iterator & another) const ;//return width unit
 		const iterator & operator=(const iterator & another);
+		//bool operator<<(int unitWidth);//move with width unit, return true for move left once more
+		//bool operator>>(int unitWidth);
 	};
 
 	//=========== about iterator ===========
@@ -100,5 +113,7 @@ signals:
 
 public slots:
 };
+
+int charWidth(QChar ch);
 
 #endif // DATA_H

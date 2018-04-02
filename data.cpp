@@ -25,7 +25,7 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 		--parentNodeIndex;
 	}
 	//judge overflow
-	if (indexInNode > p_node->charNum - 1 || indexInNode < 0){
+	if (indexInNode > p_node->charNum() - 1 || indexInNode < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
 		return iterator();
 	}
@@ -89,6 +89,11 @@ const Data::Node & Data::operator[](int n)
 
 void Data::add(const Data::iterator & locate, const QString & str)
 {
+	//if (str[i] == '\t'){
+	// //turn to blank
+	// int n = TABWIDTH - this->operator-(parentNode->begin()) % TABWIDTH;
+	// add(locate, QString(' ', 10);
+	//}
 	//todo
 }
 
@@ -122,6 +127,26 @@ void Data::copy(const Data::iterator & startLocate, const Data::iterator & endLo
 void Data::paste(const Data::iterator & locate)
 {
 	//todo
+}
+
+void Data::iterator::move(int unitWidthCount, int windowUnitCount)
+{
+	while (unitWidthCount){
+		if (**this !='\n'){
+			if (unitWidthCount < 0){//move left
+				this->operator --();
+				unitWidthCount += charWidth(**this);
+				if (unitWidthCount == 1) unitWidthCount = 0;//chinese char
+			} else if (unitWidthCount > 0){//move right
+				unitWidthCount -= charWidth(**this);
+				this->operator ++();
+				if (unitWidthCount == -1) unitWidthCount = 0;//chinese char
+			}
+		} else {//*this == '\n'
+				unitWidthCount += (windowUnitCount - parentNode()->widthUnitNum % windowUnitCount)
+				    * (unitWidthCount > 0 ? -1 : 1);//neglect blank char
+		}
+	}
 }
 
 QChar Data::iterator::operator*() const
@@ -222,16 +247,19 @@ int Data::iterator::operator-(const Data::iterator & another) const
 	int result = 0;
 	auto t = *this;
 	while (!(t.isOverFlow() || another == *this)){
-		if ((*t).unicode() >= 0x4e00 && (*t).unicode() <= 0x9fa5){
-			//chinese char
-			result +=2;
-		} else {
-			++result;
-		}
+		result += charWidth(*t);
 		++t;
 	}
 	if (t.isOverFlow()) result = -1;
 	return result;
+}
+
+int Data::Node::charNum()
+{
+	int result = 0;
+	for (int i = 0; i < heapNum; ++i){
+		result += this->operator[](i).charNum;
+	}
 }
 
 Data::Heap *Data::Node::lastHeap()
@@ -243,12 +271,17 @@ Data::Heap *Data::Node::lastHeap()
 	return p;
 }
 
-QChar Data::Node::operator[](int n)
+Data::iterator Data::Node::begin()
 {
-	if (n > charNum - 1){//not in this node
+	return iterator(this, firstHeap, 0);
+}
+
+const Data::Heap & Data::Node::operator[](int n)
+{
+	if (n > charNum() - 1){//not in this node
 		/* ===== if not in this node, we shouldn't goto next node
 		if (nextp){//go to next node
-			return (*nextp)[n - charNum];
+			return (*nextp)[n - charNum()];
 		} else {//no next node
 			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Node"));
 		}
@@ -263,7 +296,7 @@ QChar Data::Node::operator[](int n)
 			n -= heap->charNum;
 			heap = heap->nextHeap;
 		}
-		return heap->operator [](n);
+		return *heap;
 	}
 }
 
@@ -277,5 +310,17 @@ QChar Data::Heap::operator[](int n)
 		}
 	} else {//in this heap
 		return ch[n];
+	}
+}
+
+int charWidth(QChar ch)
+{
+	if (ch == '\n'){
+		return 0;
+	} else if (ch.unicode() >= 0x4e00 && ch.unicode() <= 0x9fa5){
+		//chinese char
+		return 2;
+	} else {
+		return 1;
 	}
 }
