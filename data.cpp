@@ -281,7 +281,7 @@ Data::iterator Data::Node::begin()
 
 const Data::Heap & Data::Node::operator[](int n)
 {
-	if (n > charNum() - 1){//not in this node
+	if (n > heapNum - 1){//not in this node
 		/* ===== if not in this node, we shouldn't goto next node
 		if (nextp){//go to next node
 			return (*nextp)[n - charNum()];
