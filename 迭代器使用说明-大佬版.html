@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <style>
+/*--------------------------------------------------------------------------------------------- * Copyright (c) Microsoft Corporation. All rights reserved. * Licensed under the MIT License. See License.txt in the project root for license information. *--------------------------------------------------------------------------------------------*/ body { font-family: "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback"; font-size: 14px; padding: 0 12px; line-height: 22px; word-wrap: break-word; } body.scrollBeyondLastLine { margin-bottom: calc(100vh - 22px); } body.showEditorSelection .code-line { position: relative; } body.showEditorSelection .code-active-line:before, body.showEditorSelection .code-line:hover:before { content: ""; display: block; position: absolute; top: 0; left: -12px; height: 100%; } body.showEditorSelection li.code-active-line:before, body.showEditorSelection li.code-line:hover:before { left: -30px; } .vscode-light.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(0, 0, 0, 0.15); } .vscode-light.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(0, 0, 0, 0.40); } .vscode-dark.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(255, 255, 255, 0.4); } .vscode-dark.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(255, 255, 255, 0.60); } .vscode-high-contrast.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(255, 160, 0, 0.7); } .vscode-high-contrast.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(255, 160, 0, 1); } img { max-width: 100%; max-height: 100%; } a { color: #4080D0; text-decoration: none; } a:focus, input:focus, select:focus, textarea:focus { outline: 1px solid -webkit-focus-ring-color; outline-offset: -1px; } hr { border: 0; height: 2px; border-bottom: 2px solid; } h1 { padding-bottom: 0.3em; line-height: 1.2; border-bottom-width: 1px; border-bottom-style: solid; } h1, h2, h3 { font-weight: normal; } h1 code, h2 code, h3 code, h4 code, h5 code, h6 code { font-size: inherit; line-height: auto; } a:hover { color: #4080D0; text-decoration: underline; } table { border-collapse: collapse; } table > thead > tr > th { text-align: left; border-bottom: 1px solid; } table > thead > tr > th, table > thead > tr > td, table > tbody > tr > th, table > tbody > tr > td { padding: 5px 10px; } table > tbody > tr + tr > td { border-top: 1px solid; } blockquote { margin: 0 7px 0 5px; padding: 0 16px 0 10px; border-left: 5px solid; } code { font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback"; font-size: 14px; line-height: 19px; } body.wordWrap pre { white-space: pre-wrap; } .mac code { font-size: 12px; line-height: 18px; } code > div { padding: 16px; border-radius: 3px; overflow: auto; } /** Theming */ .vscode-light { color: rgb(30, 30, 30); } .vscode-dark { color: #DDD; } .vscode-high-contrast { color: white; } .vscode-light code { color: #A31515; } .vscode-dark code { color: #D7BA7D; } .vscode-light code > div { background-color: rgba(220, 220, 220, 0.4); } .vscode-dark code > div { background-color: rgba(10, 10, 10, 0.4); } .vscode-high-contrast code > div { background-color: rgb(0, 0, 0); } .vscode-high-contrast h1 { border-color: rgb(0, 0, 0); } .vscode-light table > thead > tr > th { border-color: rgba(0, 0, 0, 0.69); } .vscode-dark table > thead > tr > th { border-color: rgba(255, 255, 255, 0.69); } .vscode-light h1, .vscode-light hr, .vscode-light table > tbody > tr + tr > td { border-color: rgba(0, 0, 0, 0.18); } .vscode-dark h1, .vscode-dark hr, .vscode-dark table > tbody > tr + tr > td { border-color: rgba(255, 255, 255, 0.18); } .vscode-light blockquote, .vscode-dark blockquote { background: rgba(127, 127, 127, 0.1); border-color: rgba(0, 122, 204, 0.5); } .vscode-high-contrast blockquote { background: transparent; border-color: #fff; }
+</style>
+<style>
+/* Tomorrow Theme */ /* http://jmblog.github.com/color-themes-for-google-code-highlightjs */ /* Original theme - https://github.com/chriskempson/tomorrow-theme */ /* Tomorrow Comment */ .hljs-comment, .hljs-quote { color: #8e908c; } /* Tomorrow Red */ .hljs-variable, .hljs-template-variable, .hljs-tag, .hljs-name, .hljs-selector-id, .hljs-selector-class, .hljs-regexp, .hljs-deletion { color: #c82829; } /* Tomorrow Orange */ .hljs-number, .hljs-built_in, .hljs-builtin-name, .hljs-literal, .hljs-type, .hljs-params, .hljs-meta, .hljs-link { color: #f5871f; } /* Tomorrow Yellow */ .hljs-attribute { color: #eab700; } /* Tomorrow Green */ .hljs-string, .hljs-symbol, .hljs-bullet, .hljs-addition { color: #718c00; } /* Tomorrow Blue */ .hljs-title, .hljs-section { color: #4271ae; } /* Tomorrow Purple */ .hljs-keyword, .hljs-selector-tag { color: #8959a8; } .hljs { display: block; overflow-x: auto; color: #4d4d4c; padding: 0.5em; } .hljs-emphasis { font-style: italic; } .hljs-strong { font-weight: bold; }
+</style>
+<style>
+ul.contains-task-list { padding-left: 0; } ul ul.contains-task-list { padding-left: 40px; } .task-list-item { list-style-type: none; } .task-list-item-checkbox { vertical-align: middle; }
+</style>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 id="">迭代器使用说明-大佬版</h1>
+<h2 id="">前提假设</h2>
+<p>假设在interface里面拥有Data类型的成员data</p>
+<h2 id="">迭代器的操作</h2>
+<p>首先 把迭代器想象成一个指向QChar的指针</p>
+<p>假设已经存在迭代器i和j以及整型数字n 则可以使用如下操作</p>
+<pre><code>QChar operator*() const ;//获得迭代器指向的QChar
+const iterator &amp; operator++();//迭代器自加 即右移1
+const iterator &amp; operator++(int);//迭代器自加 即右移1
+const iterator &amp; operator--();//迭代器自减 即左移1
+const iterator &amp; operator--(int);//迭代器自减 即左移1
+const iterator &amp; operator+(int n) const ;//迭代器右移n
+const iterator &amp; operator-(int n) const ;//迭代器左移n
+bool operator==(const iterator &amp; another) const ;//判断两个迭代器是否指向同一个位置(而不是指向的字符是否相同)
+int operator-(const iterator &amp; another) const ;//返回两个迭代器间的字符宽度单位 如果减数迭代器在被减数迭代器之前则返回一个负数
+bool isOverFlow() const ;//返回迭代器是否溢出
+void clear();//迭代器溢出状态还原
+operator bool();//返回迭代器是否overflow
+
+void move(int unitWidthCount, int windowUnitCount);//根据窗口宽度和字符宽度单位数量移动迭代器
+</code></pre>
+<p>还需要知道</p>
+<ul>
+<li>迭代器一切左移右移操作都可以跨Heap和Node移动</li>
+<li>如果迭代器在最后一位字符右移或第一位字符左移则视为溢出(overflow)</li>
+</ul>
+<p>迭代器可以自动转换成bool型变量表示其是否溢出 所以可以像下面这样这样使用迭代器</p>
+<pre><code>auto t = data.begin();
+while(t){
+	//do something
+}
+</code></pre>
+<h2 id="">获得迭代器</h2>
+<p><strong>!!不要使用构造函数获得迭代器!!</strong></p>
+<pre><code>data.begin();
+</code></pre>
+<p>可以获得一个迭代器指向data内的第一个字符 如果不存在第一个字符则视为溢出(overflow)</p>
+<pre><code>data.iteratorAt(i, j);
+</code></pre>
+<p>获得指向第i段第j位字符的迭代器 i和j从0开始计数</p>
+<pre><code>data.iteratorAt(i, j, k);
+</code></pre>
+<p>获得指向第i个Node第j个Heap第k个字符的迭代器 i,j,k从0开始计数</p>
+<h2 id="interface">关于interface的设计</h2>
+<p>以下设计仅供参考 变量名字为了方便理解写的特别长请勿参考</p>
+<p>interface应该至少包含以下设计</p>
+<pre><code>class interface{
+	class m_cursor{//光标
+		iterator locate;//光标指向的字符在Data中的位置
+		int x, y;//以像素为单位 相对于窗口左上角的显示坐标
+	};
+
+	m_cursor current_cursor;//当前光标
+	m_cursor another_cursor;//另一个的光标
+	iterator first_char_in_window;//指向窗口内的第一个字符的字符串
+};
+</code></pre>
+<h2 id="">利用迭代器实现增删改查</h2>
+<p>Data包含以下函数</p>
+<pre><code>//增删改查
+iteraotr add(const iterator &amp; locate, const QString &amp; str);
+iteraotr del(const iterator &amp; startLocate, const iterator &amp; endLocate, bool hind = 0);
+iteraotr edit(const iterator &amp; startLocate, const iterator &amp; endLocate, const QString &amp; str);
+iterator find(const iterator &amp; startLocate, const QString &amp; str);
+//剪切复制粘贴
+iterator cut(const iterator &amp; startLocate, const iterator &amp; endLocate);
+iterator copy(const iterator &amp; startLocate, const iterator &amp; endLocate);
+iterator paste(const iterator &amp; locate);//get string from system clipboard
+</code></pre>
+<p>所以根据上一节的设计可以如下实现增删改查</p>
+<pre><code>data.add(current_cursor.locate, str);//返回结束后的迭代器位置
+data.del(previous_cursor.locate, current_cursor.locate);//函数内部会自动判断两个迭代器的前后关系 不需要interface判断 返回结束后endLocate的位置
+data.edit(previous_cursor.locate, current_cursor.locate, str);//函数内部会自动判断两个迭代器的前后关系 不需要interface判断 返回结束后endLocate的位置
+current_cursor.locate = find(current_cursor.locate, str);//查找第一个匹配的位置并返回给current_cursor 如果找不到则返回原current_cursor
+</code></pre>
+<p>实现剪切复制粘贴</p>
+<pre><code>data.cut(previous_cursor.locate, current_cursor.locate);
+data.copy(previous_cursor.locate, current_cursor.locate);
+data.paste(current_cursot.locate);</code></pre>
+
+    </body>
+    </html>

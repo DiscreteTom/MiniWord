@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <style>
+/*--------------------------------------------------------------------------------------------- * Copyright (c) Microsoft Corporation. All rights reserved. * Licensed under the MIT License. See License.txt in the project root for license information. *--------------------------------------------------------------------------------------------*/ body { font-family: "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback"; font-size: 14px; padding: 0 12px; line-height: 22px; word-wrap: break-word; } body.scrollBeyondLastLine { margin-bottom: calc(100vh - 22px); } body.showEditorSelection .code-line { position: relative; } body.showEditorSelection .code-active-line:before, body.showEditorSelection .code-line:hover:before { content: ""; display: block; position: absolute; top: 0; left: -12px; height: 100%; } body.showEditorSelection li.code-active-line:before, body.showEditorSelection li.code-line:hover:before { left: -30px; } .vscode-light.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(0, 0, 0, 0.15); } .vscode-light.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(0, 0, 0, 0.40); } .vscode-dark.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(255, 255, 255, 0.4); } .vscode-dark.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(255, 255, 255, 0.60); } .vscode-high-contrast.showEditorSelection .code-active-line:before { border-left: 3px solid rgba(255, 160, 0, 0.7); } .vscode-high-contrast.showEditorSelection .code-line:hover:before { border-left: 3px solid rgba(255, 160, 0, 1); } img { max-width: 100%; max-height: 100%; } a { color: #4080D0; text-decoration: none; } a:focus, input:focus, select:focus, textarea:focus { outline: 1px solid -webkit-focus-ring-color; outline-offset: -1px; } hr { border: 0; height: 2px; border-bottom: 2px solid; } h1 { padding-bottom: 0.3em; line-height: 1.2; border-bottom-width: 1px; border-bottom-style: solid; } h1, h2, h3 { font-weight: normal; } h1 code, h2 code, h3 code, h4 code, h5 code, h6 code { font-size: inherit; line-height: auto; } a:hover { color: #4080D0; text-decoration: underline; } table { border-collapse: collapse; } table > thead > tr > th { text-align: left; border-bottom: 1px solid; } table > thead > tr > th, table > thead > tr > td, table > tbody > tr > th, table > tbody > tr > td { padding: 5px 10px; } table > tbody > tr + tr > td { border-top: 1px solid; } blockquote { margin: 0 7px 0 5px; padding: 0 16px 0 10px; border-left: 5px solid; } code { font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback"; font-size: 14px; line-height: 19px; } body.wordWrap pre { white-space: pre-wrap; } .mac code { font-size: 12px; line-height: 18px; } code > div { padding: 16px; border-radius: 3px; overflow: auto; } /** Theming */ .vscode-light { color: rgb(30, 30, 30); } .vscode-dark { color: #DDD; } .vscode-high-contrast { color: white; } .vscode-light code { color: #A31515; } .vscode-dark code { color: #D7BA7D; } .vscode-light code > div { background-color: rgba(220, 220, 220, 0.4); } .vscode-dark code > div { background-color: rgba(10, 10, 10, 0.4); } .vscode-high-contrast code > div { background-color: rgb(0, 0, 0); } .vscode-high-contrast h1 { border-color: rgb(0, 0, 0); } .vscode-light table > thead > tr > th { border-color: rgba(0, 0, 0, 0.69); } .vscode-dark table > thead > tr > th { border-color: rgba(255, 255, 255, 0.69); } .vscode-light h1, .vscode-light hr, .vscode-light table > tbody > tr + tr > td { border-color: rgba(0, 0, 0, 0.18); } .vscode-dark h1, .vscode-dark hr, .vscode-dark table > tbody > tr + tr > td { border-color: rgba(255, 255, 255, 0.18); } .vscode-light blockquote, .vscode-dark blockquote { background: rgba(127, 127, 127, 0.1); border-color: rgba(0, 122, 204, 0.5); } .vscode-high-contrast blockquote { background: transparent; border-color: #fff; }
+</style>
+<style>
+/* Tomorrow Theme */ /* http://jmblog.github.com/color-themes-for-google-code-highlightjs */ /* Original theme - https://github.com/chriskempson/tomorrow-theme */ /* Tomorrow Comment */ .hljs-comment, .hljs-quote { color: #8e908c; } /* Tomorrow Red */ .hljs-variable, .hljs-template-variable, .hljs-tag, .hljs-name, .hljs-selector-id, .hljs-selector-class, .hljs-regexp, .hljs-deletion { color: #c82829; } /* Tomorrow Orange */ .hljs-number, .hljs-built_in, .hljs-builtin-name, .hljs-literal, .hljs-type, .hljs-params, .hljs-meta, .hljs-link { color: #f5871f; } /* Tomorrow Yellow */ .hljs-attribute { color: #eab700; } /* Tomorrow Green */ .hljs-string, .hljs-symbol, .hljs-bullet, .hljs-addition { color: #718c00; } /* Tomorrow Blue */ .hljs-title, .hljs-section { color: #4271ae; } /* Tomorrow Purple */ .hljs-keyword, .hljs-selector-tag { color: #8959a8; } .hljs { display: block; overflow-x: auto; color: #4d4d4c; padding: 0.5em; } .hljs-emphasis { font-style: italic; } .hljs-strong { font-weight: bold; }
+</style>
+<style>
+ul.contains-task-list { padding-left: 0; } ul ul.contains-task-list { padding-left: 40px; } .task-list-item { list-style-type: none; } .task-list-item-checkbox { vertical-align: middle; }
+</style>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 id="">迭代器使用说明 大炮版</h1>
+<p>在内部结构Data中使用迭代器</p>
+<h2 id="">获取迭代器</h2>
+<p>在知道迭代器位置时建议使用下列函数获取迭代器<strong>而不是构造函数</strong></p>
+<pre><code>//in class Data
+iterator begin();
+iterator iteratorAt(int parentNodeIndex, int indexInNode);
+iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
+</code></pre>
+<p>因为这些函数<strong>有</strong>溢出判断 如果溢出会返回一个溢出迭代器</p>
+<p>而构造函数<strong>没有</strong>溢出判断</p>
+<h2 id="private-member">private member</h2>
+<pre><code>Node * m_parentNode;//指向迭代器的父Node
+Heap * m_parentHeap;//指向迭代器的父Heap
+int m_index;//当前迭代器在父Heap中的下标(0~99)
+bool overflow;//是否溢出
+</code></pre>
+<h2 id="">构造函数</h2>
+<h3 id="iterator">iterator()</h3>
+<p>默认构造函数 默认构造一个溢出迭代器</p>
+<ul>
+<li>m_parentNode = NULL</li>
+<li>m_parentHeap = NULL</li>
+<li>m_index = -1</li>
+<li>overflow = true</li>
+</ul>
+<h3 id="iteratornode-parentnode--heap-parentheap--int-index">iterator(Node * parentNode, Heap * parentHeap, int index)</h3>
+<p>构造函数外的唯一构造函数 重审此构造函数<strong>没有溢出判断 默认无溢出</strong></p>
+<ul>
+<li>m_parentNode = parentNode</li>
+<li>m_parentHeap = parentHeap</li>
+<li>m_index = index</li>
+<li>overflow = false</li>
+</ul>
+<h2 id="">方法</h2>
+<pre><code>bool isOverFlow() const;//判断是否溢出
+void clear();//将overflow设置为flase
+Node * parentNode() const ;//获取父Node
+Heap * parentHeap() const ;//获取父Heap
+int index() const ;//获取m_index
+
+//以下函数参考 迭代器使用说明-大佬版
+QChar operator*() const ;
+const iterator &amp; operator++();
+const iterator &amp; operator++(int);
+const iterator &amp; operator--();
+const iterator &amp; operator--(int);
+const iterator &amp; operator+(int n) const ;
+const iterator &amp; operator-(int n) const ;
+bool operator==(const iterator &amp; another) const ;
+int operator-(const iterator &amp; another) const ;//return width unit
+const iterator &amp; operator=(const iterator &amp; another);
+operator bool ();//convert to bool
+</code></pre>
+<h2 id="">何时会溢出</h2>
+<ol>
+<li>调用默认构造函数 返回溢出迭代器</li>
+<li>进行算术运算超出Data数据范围 返回溢出迭代器</li>
+<li>调用iteratorAt函数超出Data数据范围 返回溢出迭代器</li>
+<li>被溢出迭代器赋值 获取溢出迭代器的溢出状态</li>
+</ol>
+<h2 id="">需要注意的</h2>
+<p>注意迭代器的内部结构是两个指针和一个索引</p>
+<p>所以当内部数据被修改时原本未溢出的迭代器可能变成溢出的迭代器</p>
+<p>这是迭代器本身<strong>检测不到</strong>的</p>
+<p>这时迭代器就会变成一个<strong>失效迭代器</strong></p>
+<p>大佬在外部使用时不会出现这个问题</p>
+<p>但是你在修改内部数据时会遇到</p>
+<p>所以建议操作链表时<strong>尽量减少迭代器使用</strong></p>
+<p>应当使用双向链表的原生操作</p>
+<p>仅仅把迭代器作为一个<strong>定位的工具</strong></p>
+
+    </body>
+    </html>
