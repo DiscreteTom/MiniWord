@@ -1,6 +1,8 @@
 #include "data.h"
 #include <QMessageBox>
 
+#include <QDebug>
+
 Data::Data(QObject *parent) : QObject(parent)
 {
 
@@ -87,7 +89,7 @@ const Data::Node & Data::operator[](int n)
 	}
 }
 
-void Data::add(const Data::iterator & locate, const QString & str)
+Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 {
 	//if (str[i] == '\t'){
 	// //turn to blank
@@ -97,12 +99,12 @@ void Data::add(const Data::iterator & locate, const QString & str)
 	//todo
 }
 
-void Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
+Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
 {
 	//todo
 }
 
-void Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
+Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
 {
 	//todo
 }
@@ -114,17 +116,17 @@ Data::iterator Data::find(const Data::iterator & startLocate, const QString & st
 	return startLocate;
 }
 
-void Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
+Data::iterator Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
 	//todo
 }
 
-void Data::copy(const Data::iterator & startLocate, const Data::iterator & endLocate)
+Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
 	//todo
 }
 
-void Data::paste(const Data::iterator & locate)
+Data::iterator Data::paste(const Data::iterator & locate)
 {
 	//todo
 }
@@ -239,6 +241,7 @@ const Data::iterator &Data::iterator::operator=(const Data::iterator & another)
 
 bool Data::iterator::operator==(const Data::iterator & another) const
 {
+	if (overflow || another.overflow) return false;
 	return m_parentNode == another.m_parentNode && m_parentHeap == another.m_parentHeap && m_index == another.m_index;
 }
 

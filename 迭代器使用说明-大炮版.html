@@ -74,13 +74,15 @@ int operator-(const iterator &amp; another) const ;//return width unit
 const iterator &amp; operator=(const iterator &amp; another);
 operator bool ();//convert to bool
 </code></pre>
-<h2 id="">何时会溢出</h2>
+<h2 id="">溢出相关</h2>
+<p>何时会溢出</p>
 <ol>
 <li>调用默认构造函数 返回溢出迭代器</li>
 <li>进行算术运算超出Data数据范围 返回溢出迭代器</li>
 <li>调用iteratorAt函数超出Data数据范围 返回溢出迭代器</li>
 <li>被溢出迭代器赋值 获取溢出迭代器的溢出状态</li>
 </ol>
+<p>两个迭代器判断相等时(operator==)只要有一个迭代器溢出则不相等</p>
 <h2 id="">需要注意的</h2>
 <p>注意迭代器的内部结构是两个指针和一个索引</p>
 <p>所以当内部数据被修改时原本未溢出的迭代器可能变成溢出的迭代器</p>

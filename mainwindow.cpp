@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QPushButton>
 #include <QTextStream>
+
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
@@ -19,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//================== right click menu ============
 	initRightMenu();
+	connect(ui->menu_E, &QMenu::aboutToShow, this, &MainWindow::getMenu_E_state);
 
 	//================== replace and find dialog ========
 	replaceDlg = new ReplaceDlg(this);
@@ -207,7 +209,8 @@ void MainWindow::mousePressEvent(QMouseEvent * ev)
 {
 	if (ev->button() == Qt::RightButton){//show right click menu
 		//judge function state
-		if (PosCur.DataPos == PosPre.DataPos){
+		if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos){
+			//iterator are overflow or equal
 			cutAction->setDisabled(true);
 			copyAction->setDisabled(true);
 			delAction->setDisabled(true);
@@ -295,4 +298,30 @@ void MainWindow::on_action_FindNext_triggered()
 void MainWindow::on_action_Replace_triggered()
 {
 	replaceDlg->show();
+}
+
+void MainWindow::getMenu_E_state()
+{
+	//active all action
+	ui->action_Undo->setDisabled(false);
+	ui->action_Cut->setDisabled(false);
+	ui->action_Copy->setDisabled(false);
+	ui->action_Paste->setDisabled(false);
+	ui->action_Delete->setDisabled(false);
+	ui->action_Find->setDisabled(false);
+	ui->action_FindNext->setDisabled(false);
+	ui->action_Replace->setDisabled(false);
+
+	//judge function state
+	if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos){
+		ui->action_Cut->setDisabled(true);
+		ui->action_Copy->setDisabled(true);
+		ui->action_Delete->setDisabled(true);
+	}
+	//todo if UndoStack is empty then disable undo action
+
+	//judge replacedlg
+	if (!replaceDlg->findLeText().length()){
+		ui->action_FindNext->setDisabled(true);
+	}
 }

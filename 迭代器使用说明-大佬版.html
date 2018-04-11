@@ -45,8 +45,11 @@ void move(int unitWidthCount, int windowUnitCount);//根据窗口宽度和字符
 <ul>
 <li>迭代器一切左移右移操作都可以跨Heap和Node移动</li>
 <li>如果迭代器在最后一位字符右移或第一位字符左移则视为溢出(overflow)</li>
+<li>两个迭代器判断相等时(operator==)只要有一个迭代器溢出则不相等</li>
 </ul>
-<p>迭代器可以自动转换成bool型变量表示其是否溢出 所以可以像下面这样这样使用迭代器</p>
+<p>迭代器可以自动转换成bool型变量表示其是否<strong>未</strong>溢出</p>
+<p>也就是迭代器是否可用(good)</p>
+<p>所以可以像下面这样这样使用迭代器</p>
 <pre><code>auto t = data.begin();
 while(t){
 	//do something

@@ -51,6 +51,9 @@ private slots:
 	void on_action_Find_triggered();
 	void on_action_FindNext_triggered();
 	void on_action_Replace_triggered();
+
+	//============== about menu ==============
+	void getMenu_E_state();
 private:
     enum ShowType{
         UpdateALLScreen=1,

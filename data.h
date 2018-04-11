@@ -93,7 +93,7 @@ public:
 		//bool operator>>(int unitWidth);
 
 		//------ convert to bool -------
-		operator bool(){return overflow;}
+		operator bool(){return !overflow;}
 	};
 
 	//=========== about iterator ===========
