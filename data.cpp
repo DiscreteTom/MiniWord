@@ -16,7 +16,7 @@ Data::iterator Data::begin()
 Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 {
 	//judge overflow
-	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
+	if (parentNodeIndex > nodeNum || parentNodeIndex < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
 		return iterator();
 	}
@@ -45,7 +45,7 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
 {
 	//judge overflow
-	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
+	if (parentNodeIndex > nodeNum || parentNodeIndex < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
 		return iterator();
 	}
