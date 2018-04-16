@@ -80,15 +80,15 @@ public:
 
 		//----- operator overload -----
 		QChar operator*() const ;
-		const iterator & operator++();
-		const iterator & operator++(int);
-		const iterator & operator--();
-		const iterator & operator--(int);
-		const iterator & operator+(int n) const ;
-		const iterator & operator-(int n) const ;
+		iterator operator++();
+		iterator operator++(int);
+		iterator operator--();
+		iterator operator--(int);
+		iterator operator+(int n) const ;
+		iterator operator-(int n) const ;
 		bool operator==(const iterator & another) const ;
 		int operator-(const iterator & another) const ;//return width unit
-		const iterator & operator=(const iterator & another);
+		iterator operator=(const iterator & another);
 		//bool operator<<(int unitWidth);//move with width unit, return true for move left once more
 		//bool operator>>(int unitWidth);
 

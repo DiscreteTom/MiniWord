@@ -16,7 +16,7 @@ Data::iterator Data::begin()
 Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 {
 	//judge overflow
-	if (parentNodeIndex > nodeNum || parentNodeIndex < 0){
+	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
 		return iterator();
 	}
@@ -45,7 +45,7 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
 {
 	//judge overflow
-	if (parentNodeIndex > nodeNum || parentNodeIndex < 0){
+	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
 		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
 		return iterator();
 	}
@@ -156,7 +156,7 @@ QChar Data::iterator::operator*() const
 	return m_parentHeap->operator [](m_index);
 }
 
-const Data::iterator &Data::iterator::operator++()
+Data::iterator Data::iterator::operator++()
 {
 	++m_index;
 	if (m_index == m_parentHeap->charNum - 1){//not int this heap
@@ -176,14 +176,14 @@ const Data::iterator &Data::iterator::operator++()
 	return *this;
 }
 
-const Data::iterator &Data::iterator::operator++(int)
+Data::iterator Data::iterator::operator++(int)
 {
 	auto t = *this;
 	this->operator ++();
 	return t;
 }
 
-const Data::iterator &Data::iterator::operator--()
+Data::iterator Data::iterator::operator--()
 {
 	--m_index;
 	if (m_index < 0){//not in this heap
@@ -203,14 +203,14 @@ const Data::iterator &Data::iterator::operator--()
 	return *this;
 }
 
-const Data::iterator &Data::iterator::operator--(int)
+Data::iterator Data::iterator::operator--(int)
 {
 	auto t = *this;
 	this->operator --();
 	return t;
 }
 
-const Data::iterator &Data::iterator::operator+(int n) const
+Data::iterator Data::iterator::operator+(int n) const
 {
 	auto t = *this;
 	while (n){
@@ -220,7 +220,7 @@ const Data::iterator &Data::iterator::operator+(int n) const
 	return t;
 }
 
-const Data::iterator &Data::iterator::operator-(int n) const
+Data::iterator Data::iterator::operator-(int n) const
 {
 	auto t = *this;
 	while (n){
@@ -230,7 +230,7 @@ const Data::iterator &Data::iterator::operator-(int n) const
 	return t;
 }
 
-const Data::iterator &Data::iterator::operator=(const Data::iterator & another)
+Data::iterator Data::iterator::operator=(const Data::iterator & another)
 {
 	m_parentNode = another.m_parentNode;
 	m_parentHeap = another.m_parentHeap;
@@ -250,6 +250,8 @@ int Data::iterator::operator-(const Data::iterator & another) const
 	int result = 0;
 	auto t = *this;
 	while (!(t.isOverFlow() || another == *this)){
+		if (**this == '\n') return -2;
+
 		result += charWidth(*t);
 		++t;
 	}
