@@ -156,6 +156,11 @@ QChar Data::iterator::operator*() const
 	return m_parentHeap->operator [](m_index);
 }
 
+QChar &Data::iterator::operator*()
+{
+	return m_parentHeap->operator [](m_index);
+}
+
 Data::iterator Data::iterator::operator++()
 {
 	++m_index;
@@ -305,13 +310,27 @@ const Data::Heap & Data::Node::operator[](int n)
 	}
 }
 
-QChar Data::Heap::operator[](int n)
+QChar Data::Heap::operator[](int n) const
 {
 	if (n > charNum - 1){//not in this heap
 		if (nextHeap){//goto next heap
 			return (*nextHeap)[n - charNum];
 		} else {//no next heap
-			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Heap"));
+			//QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Heap"));
+			qDebug() << "try to use Heap[] to find an forbidden element";
+		}
+	} else {//in this heap
+		return ch[n];
+	}
+}
+
+QChar &Data::Heap::operator[](int n)
+{
+	if (n > charNum - 1){//not in this heap
+		if (nextHeap){//goto next heap
+			return (*nextHeap)[n - charNum];
+		} else {//no next heap
+			qDebug() << "try to use Heap[] to find an forbidden element";
 		}
 	} else {//in this heap
 		return ch[n];

@@ -26,7 +26,8 @@ private:
 		Heap * nextHeap;//pointer to the next heap
 
 		//operator overload
-		QChar operator[](int n);
+		QChar operator[](int n) const ;
+		QChar & operator[](int n);
 	};
 	class Node{
 	public:
@@ -80,6 +81,7 @@ public:
 
 		//----- operator overload -----
 		QChar operator*() const ;
+		QChar & operator*();
 		iterator operator++();
 		iterator operator++(int);
 		iterator operator--();
