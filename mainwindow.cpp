@@ -216,7 +216,7 @@ void MainWindow::mousePressEvent(QMouseEvent * ev)
 			delAction->setDisabled(true);
 		}
 		//todo if UndoStack is empty then disable undo action
-		rightMenu->exec(ev->pos());
+		rightMenu->exec(ev->screenPos().toPoint());
 		resetRightMenu();
 	}
 }

@@ -4,12 +4,14 @@
 #include <QObject>
 #include <QChar>
 #include <QString>
+#include <QStack>
 
 class Data : public QObject
 {
 	Q_OBJECT
 
 	static const int TABWIDTH = 4;
+	//static const int STACKMAXDEPTH = 20;//max depth of a stack
 
 public:
 	//iterator declare
@@ -47,11 +49,24 @@ private:
 		//------ operator overload ------
 		const Heap & operator[](int n);
 	};
+	class Action{
+	public:
+		enum Type{ADD, DEL};
+
+	private:
+		iterator m_locate;
+		Type m_type;
+		QString m_str;
+	public:
+		Action(iterator locate, Type type, QString str);
+	};
 
 	//============== private variable =====================
 	//int charNum;//number of char in the whole Data
 	int nodeNum;
 	Node * firstNode;
+	QStack<Action> undoStack;
+	QStack<Action> redoStack;
 
 public:
 	explicit Data(QObject *parent = 0);

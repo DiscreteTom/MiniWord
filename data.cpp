@@ -97,11 +97,15 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 	// add(locate, QString(' ', 10);
 	//}
 	//todo
+
+	//undoStack.push(Action(locate, Action::DEL, str));
 }
 
 Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
 {
 	//todo
+
+	//undoStack.push(Action(locate, Action::ADD, str));
 }
 
 Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
@@ -270,6 +274,7 @@ int Data::Node::charNum()
 	for (int i = 0; i < heapNum; ++i){
 		result += this->operator[](i).charNum;
 	}
+	return result;
 }
 
 Data::Heap *Data::Node::lastHeap()
