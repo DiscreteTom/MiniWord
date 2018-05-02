@@ -18,14 +18,26 @@ public:
 	class iterator;
 
 private:
+	//Node declare
+	class Node;
+
 	//============== private class declaration ===========
 	class Heap{
 	public:
+		Heap(Node * parent);
 		//variables
 		QChar ch[100];
 		int charNum;//actual number of char(0-100)
 		Heap * preHeap;//pointer to the previous heap
 		Heap * nextHeap;//pointer to the next heap
+		Node * parentNode;
+
+		//methods
+		void moveToNextHeap(int start);//move chars from start of the heap to the next heap, include start
+		iterator moveToNewNode(int start);//include start
+		void move(int start, int offset);//offset must be positive, move right, include start
+		iterator add(const QString & str, int index = -1);//if index == -1 then add to the tail, str CAN NOT include \n
+		iterator begin();
 
 		//operator overload
 		QChar operator[](int n) const ;
@@ -34,9 +46,12 @@ private:
 	class Node{
 	public:
 		//variables
+		Node(Data * m_parent, Heap * source = NULL);
+		~Node();
 		Node * preNode;//pointer to the previous node
 		Node * nextNode;//pointer to the next node
 		Heap * firstHeap;
+		Data * parent;
 		//int charNum;//number of char in this node
 		int heapNum;
 		int widthUnitNum;
@@ -45,31 +60,38 @@ private:
 		int charNum();
 		Heap * lastHeap();
 		iterator begin();
+		//iterator add(const QString & str, int index = -1);
 
 		//------ operator overload ------
 		const Heap & operator[](int n);
 	};
-	class Action{
-	public:
-		enum Type{ADD, DEL};
+//	class Action{
+//	public:
+//		enum Type{ADD, DEL};
 
-	private:
-		iterator m_locate;
-		Type m_type;
-		QString m_str;
-	public:
-		Action(iterator locate, Type type, QString str);
-	};
+//	private:
+//		iterator m_locate;
+//		Type m_type;
+//		QString m_str;
+//	public:
+//		Action(iterator locate, Type type, QString str);
+//	};
 
 	//============== private variable =====================
-	//int charNum;//number of char in the whole Data
 	int nodeNum;
 	Node * firstNode;
-	QStack<Action> undoStack;
-	QStack<Action> redoStack;
+//	QStack<Action> undoStack;
+//	QStack<Action> redoStack;
+
+	//============== private methods ==============
+	Node * addNode(Node * nodep, Heap * source = NULL);//add a node after nodep
+	Heap * addHeap(Heap * heapp);//add a heap after heapp
+	void delNode(Node * nodep);
+	bool delHeap(Heap * heapp);//return 1 if there is no heap and should delete Node
 
 public:
 	explicit Data(QObject *parent = 0);
+	~Data();
 
 	//============ iterator ============
 	class iterator{
@@ -130,7 +152,7 @@ public:
 	iterator copy(const iterator & startLocate, const iterator & endLocate);
 	iterator paste(const iterator & locate);//get string from system clipboard
 signals:
-
+	void WindowUdate();
 public slots:
 };
 

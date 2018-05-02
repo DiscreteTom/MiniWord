@@ -34,3 +34,6 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     replacedlg.ui
+
+DISTFILES += \
+    README.md
