@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	PosCur=PosPre=PosLeftUp={0,0,data.begin()};
 	if(!PosCur.DataPos)qDebug("aaa");
-	data.add(data.begin(),QString("666"));
+	data.add(data.begin(),QString("aslkfjasklfjlkasjflkas\nslkajflkasjflkasflksaj\nlaskjdlasjdlasj\naskldjlaskdjklasdlkasdla\nlaskjdlkajdlkasjldask\nlksadjlasdjaslkjdl"));
 }
 MainWindow::~MainWindow()
 {
@@ -185,40 +185,19 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 			PosPre.DataPos=PosCur.DataPos=data.add(PosCur.DataPos,tr("\t"));
 		break;
     case Qt::Key_Backspace :
-		if(PosCur.DataPos==PosPre.DataPos){
-			PosCur.DataPos--;
-			data.del(PosCur.DataPos,PosPre.DataPos);
+			PosCur.DataPos = data.del(PosPre.DataPos,PosCur.DataPos);
 			PosPre.DataPos=PosCur.DataPos;
-		}else{
-			if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY){
-				data.del(PosCur.DataPos,PosPre.DataPos);
-				PosPre = PosCur;
-			}else{
-				data.del(PosPre.DataPos,PosCur.DataPos);
-				PosCur = PosPre;
-			}
-		}
+
         break;
     case Qt::Key_Enter :
     case Qt::Key_Return :
-        data.add(PosCur.DataPos, tr("\n"));
-		PosCur.DataPos++;
+				PosCur.DataPos = data.add(PosCur.DataPos, tr("\n"));
+
 		PosPre.DataPos=PosCur.DataPos;
         break;
-    case Qt::Key_Delete :
-		if(PosCur.DataPos==PosPre.DataPos){
-			PosCur.DataPos++;
-			data.del(PosPre.DataPos,PosCur.DataPos);
+		case Qt::Key_Delete :
+			PosCur.DataPos = data.del(PosPre.DataPos,PosCur.DataPos, true);
 			PosPre.DataPos=PosCur.DataPos;
-		}else{
-			if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY){
-				data.del(PosCur.DataPos,PosPre.DataPos);
-				PosPre = PosCur;
-			}else{
-				data.del(PosPre.DataPos,PosCur.DataPos);
-				PosCur = PosPre;
-			}
-		}
         break;
 	case Qt::Key_Up :
         //todo
@@ -679,7 +658,7 @@ void MainWindow::on_action_Paste_triggered()
 }
 void MainWindow::on_action_Delete_triggered()
 {
-    data.del(PosCur.DataPos, PosPre.DataPos);
+		data.del(PosCur.DataPos, PosPre.DataPos, true);
 }
 void MainWindow::on_action_Find_triggered()
 {

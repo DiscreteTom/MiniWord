@@ -3,7 +3,6 @@
 
 #include <QDebug>
 
-//! should be the only way to add node and increase nodeNum
 Data::Node *Data::addNode(Data::Node * nodep, Heap *source)
 {
 	auto newNode = new Node(nodep->parent, source);
@@ -27,46 +26,54 @@ Data::Heap *Data::addHeap(Data::Heap *heapp)
 		heapp->nextHeap->preHeap = newHeap;
 	}
 	heapp->nextHeap = newHeap;
-	newHeap->parentNode = heapp->parentNode;
+	//newHeap->parentNode = heapp->parentNode;
 
 	++heapp->parentNode->heapNum;
 	return newHeap;
 }
 
-// created by wangjinghui, not needed
-/* void Data::delNode(Data::Node *nodep)
+void Data::delNode(Data::Node *nodep)
 {
 	if (!nodep) return;
 	if (!nodep->preNode){//the node is the head node
 		if (!nodep->nextNode){//the node is the only node and now you want to delete it
-			//throw error
-		} else {
+			qDebug() << "Data::delNode::try to delete the only node";
+			//delete all everything and get a new Node
+			delete nodep;
+			firstNode = new Node(this);
+			nodeNum = 1;
+			return;
+		} else {//not the only node
 			--nodeNum;
 			firstNode = nodep->nextNode;
 			firstNode->preNode = NULL;
+			nodep->nextNode = nodep->preNode = NULL;
 		}
-	} else{//the node is the last node or middle node
+	} else{//the node is not the first node
 		nodep->preNode->nextNode = nodep->nextNode;
 		if (nodep->nextNode){
 			nodep->nextNode->preNode = nodep->preNode;
 		}
 		--nodeNum;
+		nodep->nextNode = nodep->preNode = NULL;
 	}
 
 	delete nodep;
+	return;
 }
 
-// created by wangjinghui, not needed
-bool Data::delHeap(Data::Heap *heapp)
+void Data::delHeap(Data::Heap *heapp)
 {
-	if (!heapp) return false;
+	if (!heapp) return;
 	if (!heapp->preHeap){//the heap is the first heap of a node
 		if (!heapp->nextHeap){//the heap is the only heap of this node
-			return true;
+			delNode(heapp->parentNode);
+			return;
 		} else {//nextHeap exist
 			heapp->parentNode->firstHeap = heapp->nextHeap;
-			--heapp->parentNode->heapNum;
 			heapp->nextHeap->preHeap = NULL;
+			--heapp->parentNode->heapNum;
+			heapp->preHeap = heapp->nextHeap = NULL;
 		}
 	} else {//the heap is not the first heap
 		heapp->preHeap->nextHeap = heapp->nextHeap;
@@ -74,10 +81,57 @@ bool Data::delHeap(Data::Heap *heapp)
 			heapp->nextHeap->preHeap = heapp->preHeap;
 		}
 		--heapp->parentNode->heapNum;
+		heapp->preHeap = heapp->nextHeap = NULL;
 	}
 	delete heapp;
-	return false;
-} */
+	return;
+}
+
+void Data::mergeNextNode(Data::Node *nodep)
+{
+	if (!nodep || !nodep->nextNode) return;
+
+	Heap * wasLastHeap = nodep->lastHeap();
+	//remove \n
+	--nodep->lastHeap()->charNum;
+	//Here DO NOT judge whether this heap is empty
+	//in the end of this funciton mergeNextHeap will do the job
+
+	//change parent and heap num
+	auto p = nodep->nextNode->firstHeap;
+	while (p){
+		p->parentNode = nodep;
+		--nodep->nextNode->heapNum;
+		++nodep->heapNum;
+		p = p->nextHeap;
+	}
+	//link heap
+	nodep->nextNode->firstHeap->preHeap = nodep->lastHeap();
+	nodep->lastHeap()->nextHeap = nodep->nextNode->firstHeap;
+	nodep->nextNode->firstHeap = NULL;
+	mergeNextHeap(wasLastHeap);
+	//link node and delete node
+	delNode(nodep->nextNode);
+}
+
+bool Data::mergeNextHeap(Data::Heap *heapp)
+{
+	if (!heapp || !heapp->nextHeap) return false;
+
+	if (heapp->charNum + heapp->nextHeap->charNum <= 100){
+		//move char
+		for (int i = 0; i < heapp->nextHeap->charNum; ++i){
+			heapp->ch[heapp->charNum] = heapp->nextHeap->ch[i];
+			++heapp->charNum;
+		}
+		heapp->nextHeap->charNum = 0;
+		//link heap
+		delHeap(heapp->nextHeap);
+		return true;
+	} else {
+		return false;
+	}
+}
 
 Data::Data(QObject *parent) : QObject(parent)
 {
@@ -104,8 +158,8 @@ Data::iterator Data::begin()
 Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 {
 	//judge overflow
-	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
-		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
+	if (parentNodeIndex >= nodeNum || parentNodeIndex < 0){
+		qDebug() << "Data::iteratorAt::node overflow";
 		return iterator();
 	}
 	//get node
@@ -115,58 +169,25 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 		--parentNodeIndex;
 	}
 	//judge overflow
-	if (indexInNode > p_node->charNum() - 1 || indexInNode < 0){
-		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
+	if (indexInNode >= p_node->charNum() || indexInNode < 0){
+		qDebug() << "Data::iteratorAt:: index overflow";
 		return iterator();
 	}
 	auto p_heap = p_node->firstHeap;
-	while (indexInNode > p_heap->charNum - 1 && p_heap->nextHeap){
+	while (indexInNode >= p_heap->charNum && p_heap->nextHeap){
 		indexInNode -= p_heap->charNum;
 		p_heap = p_heap->nextHeap;
 	}
-	if (indexInNode > p_heap->charNum || indexInNode < 0){//overflow
+	if (indexInNode >= p_heap->charNum || indexInNode < 0){//overflow
 		return iterator();
 	}
 	return iterator(p_node, p_heap, indexInNode);
 }
 
-Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
+Data::Node & Data::operator[](int n)
 {
-	//judge overflow
-	if (parentNodeIndex > nodeNum - 1 || parentNodeIndex < 0){
-		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 1"));
-		return iterator();
-	}
-	//get node
-	auto p_node = firstNode;
-	while (parentNodeIndex){
-		p_node = p_node->nextNode;
-		--parentNodeIndex;
-	}
-	//judge overflow
-	if (parentHeapIndex > p_node->heapNum - 1 || parentHeapIndex < 0){
-		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 3"));
-		return iterator();
-	}
-	//get heap
-	auto p_heap = p_node->firstHeap;
-	while (parentHeapIndex > p_heap->charNum - 1){
-		parentHeapIndex -= p_heap->charNum;
-		p_heap = p_heap->nextHeap;
-	}
-	//final check
-	if (indexInHeap > p_heap->charNum - 1 || indexInHeap < 0){
-		//QMessageBox::warning(NULL, tr("Error"), tr("iteratorAt overflow 2"));
-		return iterator();
-	}
-
-	return iterator(p_node, p_heap, indexInHeap);
-}
-
-const Data::Node & Data::operator[](int n)
-{
-	if (n > nodeNum - 1 || n < 0){
-		//QMessageBox::warning(this->parent(), tr("Error"), tr("Try to get a non-existent Node"));
+	if (n >= nodeNum || n < 0){
+		qDebug() << "Data::operator[]::index overflow";
 	} else {//n is legal
 		auto p = firstNode;
 		while (n){
@@ -190,19 +211,18 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 	if (str.length() == 1){
 		if (str[0] != '\n') result = locate.parentHeap()->add(str, locate.index());
 		else {//'\n'
-			result = locate.parentHeap()->moveToNewNode(locate.index());
+			locate.parentHeap()->moveToNewNode(locate.index());
+			result = locate + 1;
 		}
 	} else {
 		//a string
 		Node * currentNode = locate.parentNode();
 		Heap * currentHeap = locate.parentHeap();
 		int currentIndex = locate.index();
-	//	int startIndex = -1;
-	//	int endIndex;
 		QStringList strList = str.split('\n');
 		for (int i = 0; i < strList.length(); ++i){
 			result = currentHeap->add(strList[i], currentIndex);
-			if (i != strList.length() - 1){
+			if (i != strList.length() - 1){//add \n
 				currentNode = addNode(currentNode);
 				currentHeap = currentNode->firstHeap;
 				currentIndex = 0;
@@ -217,22 +237,94 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
 {
 	//todo
-
 	//undoStack.push(Action(locate, Action::ADD, str));
-	int len = 0;
-	for(auto i = startLocate;!(i == endLocate)&&!i.isOverFlow();i++){
-		len++;
+
+	if (startLocate == endLocate){//just delete one char
+		iterator aim = startLocate;
+		iterator result = startLocate;
+		if (!hind){//delete pre char
+			if (startLocate == begin()){//no pre char
+				emit WindowUdate();;
+				return startLocate;
+			}
+			--aim;
+		} else {//delete this char
+			if (startLocate + 1){//next char exist
+				++result;
+			} else {//this char is the last char of Data
+				emit WindowUdate();
+				return startLocate;
+			}
+		}
+		//now delete aim
+		if (*aim == '\n'){
+			mergeNextNode(aim.parentNode());//when delete \n just merge
+			emit WindowUdate();
+			return aim;
+		}
+		for (int i = aim.index(); i < aim.parentHeap()->charNum - 1; ++i){
+			aim.parentHeap()->ch[i] = aim.parentHeap()->ch[i + 1];//move left
+		}
+		--aim.parentHeap()->charNum;
+		//need to delete heap or node?
+		if (!aim.parentHeap()->charNum){
+			delHeap(aim.parentHeap());//auto delete Node and judge empty
+		}
+
+		//if (hind) --result;
+		emit WindowUdate();
+		if (result - 1){
+			return --result;
+		} else {
+			return result;
+		}
+	} else {//not just delete one char
+		//judge which one is front
+		iterator frontLocate, hindLocate;
+		if (startLocate - endLocate > 0){
+			frontLocate = startLocate;
+			hindLocate = endLocate;
+		} else {
+			frontLocate = endLocate;
+			hindLocate = startLocate;
+		}
+
+		//move chars
+		hindLocate.parentHeap()->moveToNextHeap(hindLocate.index());
+		//cut
+		frontLocate.parentHeap()->charNum = frontLocate.index() + 1;
+		if (hindLocate.parentHeap() == frontLocate.parentHeap()){//in the same heap, unlikely to delete \n
+			mergeNextHeap(frontLocate.parentHeap());//must be successful
+		} else if (frontLocate.parentNode() == hindLocate.parentNode()){//in the same node, unlikely to delete \n
+			while (frontLocate.parentHeap()->nextHeap != hindLocate.parentHeap()){
+				delHeap(frontLocate.parentHeap()->nextHeap);
+			}
+			delHeap(frontLocate.parentHeap()->nextHeap);
+			mergeNextHeap(frontLocate.parentHeap());
+		} else {//in different node
+			while (frontLocate.parentNode()->nextNode != hindLocate.parentNode()){
+				//delete middle node
+				delNode(frontLocate.parentNode()->nextNode);
+			}
+			while (hindLocate.parentNode()->firstHeap != hindLocate.parentHeap()){
+				//delete middle heap
+				delHeap(hindLocate.parentNode()->firstHeap);
+			}
+			delHeap(hindLocate.parentHeap());
+			mergeNextNode(frontLocate.parentNode());
+		}
+
+
+		emit WindowUdate();
+		return frontLocate + 1;
 	}
-	for(auto i = startLocate;!i.isOverFlow();i++){
-		i.parentHeap()->ch[i.index()]=i.parentHeap()->ch[i.index()+len];
-	}
-	startLocate.parentHeap()->charNum -= len;
-	emit WindowUdate();
 }
 
 Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
 {
-	//todo
+	auto t = del(startLocate, endLocate);
+	t = add(t, str);
+	return t;
 }
 
 Data::iterator Data::find(const Data::iterator & startLocate, const QString & str)
@@ -257,35 +349,35 @@ Data::iterator Data::paste(const Data::iterator & locate)
 	//todo
 }
 
-void Data::iterator::move(int unitWidthCount, int windowUnitCount)
-{
-	while (unitWidthCount){
-		if (**this !='\n'){
-			if (unitWidthCount < 0){//move left
-				this->operator --();
-				unitWidthCount += charWidth(**this);
-				if (unitWidthCount == 1) unitWidthCount = 0;//chinese char
-			} else if (unitWidthCount > 0){//move right
-				unitWidthCount -= charWidth(**this);
-				this->operator ++();
-				if (unitWidthCount == -1) unitWidthCount = 0;//chinese char
-			}
-		} else {//*this == '\n'
-				unitWidthCount += (windowUnitCount - parentNode()->widthUnitNum % windowUnitCount)
-				    * (unitWidthCount > 0 ? -1 : 1);//neglect blank char
-		}
-	}
-}
+//void Data::iterator::move(int unitWidthCount, int windowUnitCount)
+//{
+//	while (unitWidthCount){
+//		if (**this !='\n'){
+//			if (unitWidthCount < 0){//move left
+//				this->operator --();
+//				unitWidthCount += charWidth(**this);
+//				if (unitWidthCount == 1) unitWidthCount = 0;//chinese char
+//			} else if (unitWidthCount > 0){//move right
+//				unitWidthCount -= charWidth(**this);
+//				this->operator ++();
+//				if (unitWidthCount == -1) unitWidthCount = 0;//chinese char
+//			}
+//		} else {//*this == '\n'
+//				unitWidthCount += (windowUnitCount - parentNode()->widthUnitNum % windowUnitCount)
+//				    * (unitWidthCount > 0 ? -1 : 1);//neglect blank char
+//		}
+//	}
+//}
 
 QChar Data::iterator::operator*() const
 {
 	return m_parentHeap->operator [](m_index);
 }
 
-QChar &Data::iterator::operator*()
-{
-	return m_parentHeap->operator [](m_index);
-}
+//QChar &Data::iterator::operator*()
+//{
+//	return m_parentHeap->operator [](m_index);
+//}
 
 Data::iterator Data::iterator::operator++()
 {
@@ -300,6 +392,7 @@ Data::iterator Data::iterator::operator++()
 				m_parentHeap = m_parentNode->firstHeap;
 				m_index = 0;
 			} else {//no next node
+				qDebug() << "Data::iterator::operator++::overflow";
 				overflow = true;
 				--m_index;
 			}
@@ -328,6 +421,7 @@ Data::iterator Data::iterator::operator--()
 				m_parentHeap = m_parentNode->lastHeap();
 				m_index = m_parentHeap->charNum - 1;
 			} else {//no previous node
+				qDebug() << "Data::iterator::operator--::overflow";
 				overflow = true;
 				++m_index;
 			}
@@ -357,7 +451,7 @@ Data::iterator Data::iterator::operator-(int n) const
 {
 	auto t = *this;
 	while (n){
-		++t;
+		--t;
 		--n;
 	}
 	return t;
@@ -378,14 +472,19 @@ bool Data::iterator::operator==(const Data::iterator & another) const
 	return m_parentNode == another.m_parentNode && m_parentHeap == another.m_parentHeap && m_index == another.m_index;
 }
 
+bool Data::iterator::operator!=(const Data::iterator &another) const
+{
+	return !(*this == another);
+}
+
 int Data::iterator::operator-(const Data::iterator & another) const
 {
+	//return charNum between two iterator, include \n
 	int result = 0;
 	auto t = *this;
-	while (!(t.isOverFlow() || another == *this)){
-		if (**this == '\n') return -2;
-
-		result += charWidth(*t);
+	while (t && another != *this){
+		//result += charWidth(*t);
+		++result;
 		++t;
 	}
 	if (t.isOverFlow()) result = -1;
@@ -397,12 +496,13 @@ Data::Node::Node(Data *m_parent, Heap *source)
 	preNode = NULL;
 	nextNode = NULL;
 	heapNum = 1;
-	widthUnitNum = 0;
+	//widthUnitNum = 0;
 	parent = m_parent;
 
 	if (source){
 		firstHeap = source;
 		source->preHeap = NULL;
+		//change parent and heapnum
 		source->parentNode = this;
 		while (source->nextHeap){
 			source = source->nextHeap;
@@ -418,7 +518,7 @@ Data::Node::Node(Data *m_parent, Heap *source)
 
 Data::Node::~Node()
 {
-	//just free memory
+	//just free memory of heaps
 	auto p = firstHeap;
 	while (p){
 		auto q = p;
@@ -477,21 +577,11 @@ Data::iterator Data::Node::begin()
 	}
 } */
 
-const Data::Heap & Data::Node::operator[](int n)
+Data::Heap & Data::Node::operator[](int n)
 {
 	if (n > heapNum - 1){//not in this node
-		/* ===== if not in this node, we shouldn't goto next node
-		if (nextp){//go to next node
-			return (*nextp)[n - charNum()];
-		} else {//no next node
-			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Node"));
-		}
-		  =====*/
-			QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Node"));
+		qDebug << "Data::Node::operator[]::heap index overflow";
 	} else {//in this node
-		/* ===== use a loop instead of resursion
-		return (*firstHeap)[n];
-		   =====*/
 		auto heap = firstHeap;
 		while (n){
 			--n;
@@ -524,9 +614,9 @@ void Data::Heap::moveToNextHeap(int start)
 	charNum = start;
 }
 
-Data::iterator Data::Heap::moveToNewNode(int start)
+void Data::Heap::moveToNewNode(int start)
 {
-	if (start < 0 || start >= charNum) return iterator();//error
+	if (start < 0 || start >= charNum) return;// iterator();//error
 	//if (this == parentNode->firstHeap && start == 0) return iterator();//not move
 
 	moveToNextHeap(start);
@@ -534,7 +624,14 @@ Data::iterator Data::Heap::moveToNewNode(int start)
 	nextHeap = NULL;
 	charNum = start + 1;
 	ch[charNum - 1] = '\n';
-	return parentNode->nextNode->begin();
+	//change heapNum
+	parentNode->heapNum = 0;
+	auto p = parentNode->firstHeap;
+	while (p){
+		++parentNode->heapNum;
+		p = p->nextHeap;
+	}
+	//return parentNode->nextNode->begin();
 }
 
 // created by wangjinghui, not needed
@@ -549,12 +646,7 @@ Data::iterator Data::Heap::moveToNewNode(int start)
 QChar &Data::Heap::operator[](int n)
 {
 	if (n > charNum - 1){//not in this heap
-		if (nextHeap){//goto next heap
-			return (*nextHeap)[n - charNum];
-		} else {//no next heap
-			//QMessageBox::warning(NULL, tr("Error"), tr("Try to find overflow char from Heap"));
-			qDebug() << "try to use Heap[] to find an forbidden element";
-		}
+		qDebug() << "Data::Heap::operator[]::index overflow";
 	} else {//in this heap
 		return ch[n];
 	}
@@ -563,11 +655,7 @@ QChar &Data::Heap::operator[](int n)
 QChar Data::Heap::operator[](int n) const
 {
 	if (n > charNum - 1){//not in this heap
-		if (nextHeap){//goto next heap
-			return (*nextHeap)[n - charNum];
-		} else {//no next heap
-			qDebug() << "try to use Heap[] to find an forbidden element";
-		}
+		qDebug() << "Data::Heap::operator[]::index overflow";
 	} else {//in this heap
 		return ch[n];
 	}
@@ -575,15 +663,16 @@ QChar Data::Heap::operator[](int n) const
 
 Data::iterator Data::Heap::add(const QString & str, int index)
 {
-	//str CAN NOT include \n
-	//if index == -1 then add to tail
+	//! str CAN NOT include \n
+	//! if index == -1 then add to tail
+
 	if (index >= 100){
 		qDebug() << "Data::Heap::add::index>=100";
 		return iterator();
 	}
 	if (index == -1) index = charNum;
 
-	//a single char
+	//! a single char
 	if (str.length() == 1){
 		if (charNum >= 100){
 			if (!nextHeap || nextHeap->charNum >99){//get a new heap
@@ -600,20 +689,17 @@ Data::iterator Data::Heap::add(const QString & str, int index)
 			}
 		}
 		//now this heap fits
-		for (int i = charNum - 1; i >= index; --i){
+		for (int i = charNum - 1; i >= index; --i){//move right
 			if (i == 99) continue;
 			ch[i + 1] = ch[i];
 		}
 		ch[index] = str[0];
 		if (charNum < 100) ++charNum;
 
-		if (index == 99)
-			return iterator(parentNode, nextHeap, 0);
-		else
-			return iterator(parentNode, this, index + 1);
+			return iterator(parentNode, this, index) + 1;
 	}
 
-	//a string
+	//! a string
 	if (charNum + str.length() <= 100) {//this heap fits
 		for (int i = index; i < charNum; ++i){//move right
 			ch[i + str.length()] = ch[i];
@@ -647,14 +733,14 @@ Data::iterator Data::Heap::begin()
 	return iterator(parentNode, this, 0);
 }
 
-int charWidth(QChar ch)
-{
-	if (ch == '\n'){
-		return 0;
-	} else if (ch.unicode() >= 0x4e00 && ch.unicode() <= 0x9fa5){
-		//chinese char
-		return 2;
-	} else {
-		return 1;
-	}
-}
+//int charWidth(QChar ch)
+//{
+//	if (ch == '\n'){
+//		return 0;
+//	} else if (ch.unicode() >= 0x4e00 && ch.unicode() <= 0x9fa5){
+//		//chinese char
+//		return 2;
+//	} else {
+//		return 1;
+//	}
+//}

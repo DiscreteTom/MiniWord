@@ -10,7 +10,7 @@ class Data : public QObject
 {
 	Q_OBJECT
 
-	static const int TABWIDTH = 4;
+	//static const int TABWIDTH = 4;
 	//static const int STACKMAXDEPTH = 20;//max depth of a stack
 
 public:
@@ -34,7 +34,7 @@ private:
 
 		//methods
 		void moveToNextHeap(int start);//move chars from start of the heap to the next heap, include start
-		iterator moveToNewNode(int start);//include start
+		void moveToNewNode(int start);//include start
 		void move(int start, int offset);//offset must be positive, move right, include start
 		iterator add(const QString & str, int index = -1);//if index == -1 then add to the tail, str CAN NOT include \n
 		iterator begin();
@@ -52,18 +52,16 @@ private:
 		Node * nextNode;//pointer to the next node
 		Heap * firstHeap;
 		Data * parent;
-		//int charNum;//number of char in this node
 		int heapNum;
-		int widthUnitNum;
+		//int widthUnitNum;
 
 		//methods
 		int charNum();
 		Heap * lastHeap();
 		iterator begin();
-		//iterator add(const QString & str, int index = -1);
 
 		//------ operator overload ------
-		const Heap & operator[](int n);
+		Heap & operator[](int n);
 	};
 //	class Action{
 //	public:
@@ -87,7 +85,12 @@ private:
 	Node * addNode(Node * nodep, Heap * source = NULL);//add a node after nodep
 	Heap * addHeap(Heap * heapp);//add a heap after heapp
 	void delNode(Node * nodep);
-	bool delHeap(Heap * heapp);//return 1 if there is no heap and should delete Node
+	void delHeap(Heap * heapp);
+	void mergeNextNode(Node * nodep);
+	bool mergeNextHeap(Heap * heapp);
+
+	//======= private operator overload ========
+	Node & operator[](int n);
 
 public:
 	explicit Data(QObject *parent = 0);
@@ -107,7 +110,7 @@ public:
 		iterator(Node * parentNode, Heap * parentHeap, int index)
 		  :m_parentNode(parentNode), m_parentHeap(parentHeap), m_index(index), overflow(false){}
 
-		void move(int unitWidthCount, int windowUnitCount);//unitWidthCount can be minus
+		//void move(int unitWidthCount, int windowUnitCount);//unitWidthCount can be minus
 
 		//inline methods
 		bool isOverFlow() const {return overflow;}
@@ -118,7 +121,7 @@ public:
 
 		//----- operator overload -----
 		QChar operator*() const ;
-		QChar & operator*();
+		//QChar & operator*();
 		iterator operator++();
 		iterator operator++(int);
 		iterator operator--();
@@ -126,10 +129,9 @@ public:
 		iterator operator+(int n) const ;
 		iterator operator-(int n) const ;
 		bool operator==(const iterator & another) const ;
+		bool operator!=(const iterator & another) const ;
 		int operator-(const iterator & another) const ;//return width unit
 		iterator operator=(const iterator & another);
-		//bool operator<<(int unitWidth);//move with width unit, return true for move left once more
-		//bool operator>>(int unitWidth);
 
 		//------ convert to bool -------
 		operator bool(){return !overflow;}
@@ -138,10 +140,6 @@ public:
 	//=========== about iterator ===========
 	iterator begin();
 	iterator iteratorAt(int parentNodeIndex, int indexInNode);
-	iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
-
-	//======= operator overload ========
-	const Node & operator[](int n);
 
 	//========== about text edit ========
 	iterator add(const iterator & locate, const QString & str);
@@ -156,6 +154,6 @@ signals:
 public slots:
 };
 
-int charWidth(QChar ch);
+//int charWidth(QChar ch);
 
 #endif // DATA_H
