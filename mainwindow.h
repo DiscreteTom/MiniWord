@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+	~MainWindow();
 private slots:
     //=============== about file =================
     void on_action_New_triggered();
@@ -53,8 +53,9 @@ private slots:
     void getMenu_E_state();
 
 	//============== about update ============
-	void RefreshProtectedUpdateTimer();
+
 	void ProtectedUpdate();					//保护式刷新
+	void GetDataHeight();					//获取文本高度并更新与显示相关的信息
 private:
     Ui::MainWindow *ui;
     //=================== Object ===============================
@@ -91,16 +92,24 @@ private:
 	int FontSizeW;							//字体宽度
 	int FontSizeH;							//字体高度
 	int TabWidth;							//Tab宽度
+	bool IsNeededFindCursor;				//判断是否需要定位光标位置
 
 	int CursorTimer;						//光标闪烁计时器
 	QTimer MyCursorTimer;					//光标闪烁定时器
 
 	int ProtectedUpdateTimer;				//保护式刷新计时器
 	QTimer MyProtectedUpdateTimer;			//保护式刷新定时器
+
 	void RefreshShowPos();					//刷新光标显示位置
+	void LocateCursor(int x,int y);			//光标定位
 	void FillBlueArea(Pos &pos1, Pos &pos2, QPainter*painter);
-	void FindCursor();						//将光标定位于视野中
 	void Rolling(int flag);					//页面滚动,flag表示向上滚还是向下滚
+	void LocateLeftUpCursor(int newDataTextTop,int flag = 0);
+											//左上角光标定位,flag表示是否需要绝对定位
+	void FindCursor();						//将光标定位于视野中
+
+	void ChangeFontSize(int Size);			//改变字体大小
+
 
     //===================== Methods ========================
 
