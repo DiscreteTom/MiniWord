@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ProtectedUpdateTimer=1;
 
 	PosCur=PosPre=PosLeftUp={0,0,data.begin()};
-
+	PosCur.DataPos = data.add(PosCur.DataPos, tr("123456789\n123456789\n123456789\n"));
 }
 MainWindow::~MainWindow()
 {
@@ -205,8 +205,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 					LocateLeftUpCursor(DataTextTop-1);
 				}
 			}
-			PosCur.DataPos--;
-			data.del(PosCur.DataPos,PosPre.DataPos);
+			//PosCur.DataPos--;
+			PosCur.DataPos = data.del(PosCur.DataPos,PosPre.DataPos);
 			PosPre=PosCur;
 		}else{
 			if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY){

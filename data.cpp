@@ -93,7 +93,8 @@ void Data::mergeNextNode(Data::Node *nodep)
 
 	Heap * wasLastHeap = nodep->lastHeap();
 	//remove \n
-	--nodep->lastHeap()->charNum;
+	if (nodep->lastHeap()->ch[nodep->lastHeap()->charNum - 1] == '\n')
+		--nodep->lastHeap()->charNum;
 	//Here DO NOT judge whether this heap is empty
 	//in the end of this funciton mergeNextHeap will do the job
 
@@ -292,7 +293,7 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		//move chars
 		hindLocate.parentHeap()->moveToNextHeap(hindLocate.index());
 		//cut
-		frontLocate.parentHeap()->charNum = frontLocate.index() + 1;
+		frontLocate.parentHeap()->charNum = frontLocate.index();
 		if (hindLocate.parentHeap() == frontLocate.parentHeap()){//in the same heap, unlikely to delete \n
 			mergeNextHeap(frontLocate.parentHeap());//must be successful
 		} else if (frontLocate.parentNode() == hindLocate.parentNode()){//in the same node, unlikely to delete \n
@@ -482,7 +483,8 @@ int Data::iterator::operator-(const Data::iterator & another) const
 	//return charNum between two iterator, include \n
 	int result = 0;
 	auto t = *this;
-	while (t && another != *this){
+
+	while (t && another != t){
 		//result += charWidth(*t);
 		++result;
 		++t;
@@ -580,7 +582,7 @@ Data::iterator Data::Node::begin()
 Data::Heap & Data::Node::operator[](int n)
 {
 	if (n > heapNum - 1){//not in this node
-		qDebug << "Data::Node::operator[]::heap index overflow";
+		qDebug() << "Data::Node::operator[]::heap index overflow";
 	} else {//in this node
 		auto heap = firstHeap;
 		while (n){
