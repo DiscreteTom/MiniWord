@@ -19,69 +19,69 @@ namespace Ui {
 class MainWindow;
 }
 struct Pos{
-    int ShowPosX;
-    int ShowPosY;
-    Data::iterator DataPos;
+	int ShowPosX;
+	int ShowPosY;
+	Data::iterator DataPos;
 };
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = 0);
+	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
 private slots:
-    //=============== about file =================
-    void on_action_New_triggered();
-    void on_action_Open_triggered();
-    void on_action_Save_triggered();
-    void on_action_SaveAs_triggered();
+	//=============== about file =================
+	void on_action_New_triggered();
+	void on_action_Open_triggered();
+	void on_action_Save_triggered();
+	void on_action_SaveAs_triggered();
 
-    //=============== about window ================
-    void on_action_Exit_triggered();
+	//=============== about window ================
+	void on_action_Exit_triggered();
 
-    //=============== about text ==================
-    void on_action_Undo_triggered();
-    void on_action_Cut_triggered();
-    void on_action_Copy_triggered();
-    void on_action_Paste_triggered();
-    void on_action_Delete_triggered();
-    void on_action_Find_triggered();
-    void on_action_FindNext_triggered();
-    void on_action_Replace_triggered();
+	//=============== about text ==================
+	void on_action_Undo_triggered();
+	void on_action_Cut_triggered();
+	void on_action_Copy_triggered();
+	void on_action_Paste_triggered();
+	void on_action_Delete_triggered();
+	void on_action_Find_triggered();
+	void on_action_FindNext_triggered();
+	void on_action_Replace_triggered();
 
-    //============== about menu ==============
-    void getMenu_E_state();
+	//============== about menu ==============
+	void getMenu_E_state();
 
 	//============== about update ============
-
+	void getDataChanged();
 	void ProtectedUpdate();					//保护式刷新
 	void GetDataHeight();					//获取文本高度并更新与显示相关的信息
 private:
-    Ui::MainWindow *ui;
-    //=================== Object ===============================
-    //------------ Right Click Menu-------
-    QMenu * rightMenu;
-    QAction * undoAction;
-    QAction * cutAction;
-    QAction * copyAction;
-    QAction * pasteAction;
-    QAction * delAction;
-    QAction * seleteAllAction;
+	Ui::MainWindow *ui;
+	//=================== Object ===============================
+	//------------ Right Click Menu-------
+	QMenu * rightMenu;
+	QAction * undoAction;
+	QAction * cutAction;
+	QAction * copyAction;
+	QAction * pasteAction;
+	QAction * delAction;
+	QAction * seleteAllAction;
 
-    //----------- replace and find dialog ----------
-    ReplaceDlg * replaceDlg;
+	//----------- replace and find dialog ----------
+	ReplaceDlg * replaceDlg;
 
-    //=================== Variable ============================
+	//=================== Variable ============================
 
-    //----------- about file -----------
-    bool isUntitled;
-    bool shouldSave;
-    QString curFile;
+	//----------- about file -----------
+	bool isUntitled;
+	bool shouldSave;
+	QString curFile;//path and name
 
-    //------------ data ---------
-    Data data;
+	//------------ data ---------
+	Data data;
 
-    //------------ show ---------
+	//------------ show ---------
 	Pos PosLeftUp;							//最左上角光标
 	Pos PosCur;								//当前时刻光标
 	Pos PosPre;								//上一时刻光标
@@ -111,29 +111,29 @@ private:
 	void ChangeFontSize(int Size);			//改变字体大小
 
 
-    //===================== Methods ========================
+	//===================== Methods ========================
 
-    //-------- initialize Right Click Menu ---------
-    void initRightMenu();
-    void resetRightMenu();
+	//-------- initialize Right Click Menu ---------
+	void initRightMenu();
+	void resetRightMenu();
 
-    //------------ about file ------------
-    void newFile();
-    bool maybeSave();
-    bool save();
-    bool saveAs();
-    bool saveFile(const QString & path);
-    bool openFile(const QString & path);
+	//------------ about file ------------
+	void newFile();
+	bool maybeSave();
+	bool save();
+	bool saveAs();
+	bool saveFile(const QString & path);
+	bool openFile(const QString & path);
 
 protected:
-    void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
-    void keyPressEvent(QKeyEvent * ev);
-    void inputMethodEvent(QInputMethodEvent * ev);
-    void mousePressEvent(QMouseEvent * ev);
+	void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
+	void keyPressEvent(QKeyEvent * ev);
+	void inputMethodEvent(QInputMethodEvent * ev);
+	void mousePressEvent(QMouseEvent * ev);
 	void mouseDoubleClickEvent(QMouseEvent * ev);
 	void mouseMoveEvent(QMouseEvent * ev);
 	void wheelEvent(QWheelEvent *ev);
-    void paintEvent(QPaintEvent * ev);
+	void paintEvent(QPaintEvent * ev);
 };
 
 #endif // MAINWINDOW_H

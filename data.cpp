@@ -1,5 +1,7 @@
 #include "data.h"
 #include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
 
 #include <QDebug>
 
@@ -156,6 +158,11 @@ Data::iterator Data::begin()
 	return iteratorAt(0, 0);
 }
 
+Data::iterator Data::end()
+{
+	return iteratorAt(nodeNum - 1, (this->operator [](nodeNum - 1)).charNum() - 1);
+}
+
 Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 {
 	//judge overflow
@@ -232,6 +239,7 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 	}
 
 	emit WindowUdate();
+	emit dataChanged();
 	return result;
 }
 
@@ -260,6 +268,8 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		//now delete aim
 		if (*aim == '\n'){
 			mergeNextNode(aim.parentNode());//when delete \n just merge
+
+			emit dataChanged();
 			emit WindowUdate();
 			return aim;
 		}
@@ -273,6 +283,7 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		}
 
 		//if (hind) --result;
+		emit dataChanged();
 		emit WindowUdate();
 		if (result - 1){
 			return --result;
@@ -317,6 +328,7 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 
 
 		emit WindowUdate();
+		emit dataChanged();
 		return frontLocate + 1;
 	}
 }
@@ -348,6 +360,52 @@ Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterat
 Data::iterator Data::paste(const Data::iterator & locate)
 {
 	//todo
+}
+
+void Data::clear()
+{
+	while (!isEmpty()) delNode(firstNode);
+	emit WindowUdate();
+}
+
+bool Data::isEmpty()
+{
+	if (nodeNum == 1 && firstNode->charNum() == 1) return true;
+	else return false;
+}
+
+void Data::save(const QString &pathAndName)
+{
+	QFile file(pathAndName);
+	if (!file.open(QFile::WriteOnly | QFile::Text)){
+		qDebug() << "Data::save::file open fail";
+		return;
+	}
+
+	QTextStream out(&file);
+
+	auto i = begin();
+	while (i){
+		out << *i;
+		++i;
+	}
+}
+
+void Data::read(const QString &pathAndName)
+{
+	QFile file(pathAndName);
+	if (!file.open(QFile::ReadOnly | QFile::Text)){
+		qDebug() << "Data::read::file open fail";
+		return;
+	}
+
+	QTextStream in(&file);
+
+	QString buf;
+	while (!in.atEnd()){
+		buf = in.read(100);
+		add(end(), buf);
+	}
 }
 
 //void Data::iterator::move(int unitWidthCount, int windowUnitCount)

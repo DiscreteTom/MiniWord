@@ -139,6 +139,7 @@ public:
 
 	//=========== about iterator ===========
 	iterator begin();
+	iterator end();
 	iterator iteratorAt(int parentNodeIndex, int indexInNode);
 
 	//========== about text edit ========
@@ -149,8 +150,15 @@ public:
 	iterator cut(const iterator & startLocate, const iterator & endLocate);
 	iterator copy(const iterator & startLocate, const iterator & endLocate);
 	iterator paste(const iterator & locate);//get string from system clipboard
+	void clear();
+	bool isEmpty();
+
+	//========= about file ===========
+	void save(const QString & pathAndName);
+	void read(const QString & pathAndName);
 signals:
 	void WindowUdate();
+	void dataChanged();
 public slots:
 };
 

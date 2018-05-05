@@ -2,9 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QFile>
 #include <QPushButton>
-#include <QTextStream>
+#include <QDebug>
 
 const int FirstQCharX = 30;
 const int FirstQCharY = 50;
@@ -21,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	shouldSave = false;
 	curFile = tr("无标题.txt");
 	setWindowTitle(curFile + tr(" - MiniWord"));
+	connect(&data, &Data::dataChanged, this, &MainWindow::getDataChanged);
 	//================== right click menu ============
 	initRightMenu();
 	connect(ui->menu_E, &QMenu::aboutToShow, this, &MainWindow::getMenu_E_state);
@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	centralWidget()->setMouseTracking(true);
 	setMouseTracking(true);
 
+	//==================== interface ====================
 	MyCursorTimer.start(700);
 	MyProtectedUpdateTimer.start(30);
 
@@ -52,7 +53,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ProtectedUpdateTimer=1;
 
 	PosCur=PosPre=PosLeftUp={0,0,data.begin()};
-	PosCur.DataPos = data.add(PosCur.DataPos, tr("123456789\n123456789\n123456789\n"));
 }
 MainWindow::~MainWindow()
 {
@@ -66,118 +66,122 @@ void MainWindow::initRightMenu()
 	cutAction = new QAction(tr("剪切(&T)"), this);
 	copyAction = new QAction(tr("复制(&C)"), this);
 	pasteAction = new QAction(tr("粘贴(&P)"), this);
-    delAction = new QAction(tr("删除(&D)"), this);
-    seleteAllAction = new QAction(tr("全选(&A)"), this);
+	delAction = new QAction(tr("删除(&D)"), this);
+	seleteAllAction = new QAction(tr("全选(&A)"), this);
 	//todo:connect action and function
-    //setup ui
-    rightMenu->addAction(undoAction);
-    rightMenu->addSeparator();
-    rightMenu->addAction(cutAction);
-    rightMenu->addAction(copyAction);
-    rightMenu->addAction(pasteAction);
-    rightMenu->addAction(delAction);
-    rightMenu->addSeparator();
-    rightMenu->addAction(seleteAllAction);
+	//setup ui
+	rightMenu->addAction(undoAction);
+	rightMenu->addSeparator();
+	rightMenu->addAction(cutAction);
+	rightMenu->addAction(copyAction);
+	rightMenu->addAction(pasteAction);
+	rightMenu->addAction(delAction);
+	rightMenu->addSeparator();
+	rightMenu->addAction(seleteAllAction);
 }
 void MainWindow::resetRightMenu()
 {
-    //activate all methods
-    undoAction->setDisabled(false);
-    cutAction->setDisabled(false);
-    copyAction->setDisabled(false);
-    pasteAction->setDisabled(false);
-    delAction->setDisabled(false);
-    seleteAllAction->setDisabled(false);
+	//activate all methods
+	undoAction->setDisabled(false);
+	cutAction->setDisabled(false);
+	copyAction->setDisabled(false);
+	pasteAction->setDisabled(false);
+	delAction->setDisabled(false);
+	seleteAllAction->setDisabled(false);
 }
 void MainWindow::newFile()
 {
-    if (maybeSave()){
-    //ok to create a new file
-		//todo:clear
-        curFile = tr("无标题.txt");
-        isUntitled = true;
-        shouldSave = false;
-    }
+	if (maybeSave()){
+	//ok to create a new file
+		data.clear();
+		curFile = tr("无标题.txt");
+		isUntitled = true;
+		shouldSave = false;
+		//todo: move iterator
+		//PosCur.DataPos = PosPre.DataPos = data.begin();
+	}
 }
 
 bool MainWindow::maybeSave()
 {
-    if (shouldSave){
-        QMessageBox box;
-        box.setWindowTitle(tr("MiniWord"));
-        box.setIcon(QMessageBox::Warning);
-        box.setText(tr("是否将更改保存到 ") + curFile + " ?");
-        QPushButton * yesBtn = box.addButton(tr("是(&Y"), QMessageBox::YesRole);
-        box.addButton(tr("否(&N)"), QMessageBox::NoRole);
-        QPushButton * cancelBtn = box.addButton(tr("取消"), QMessageBox::RejectRole);
-        box.exec();
-        if (box.clickedButton() == yesBtn)
-            return save();
-        else if (box.clickedButton() == cancelBtn)
-            return false;
-    }
-    return true;
+	if (isUntitled && data.isEmpty()) return true;
+	if (shouldSave){
+		QMessageBox box;
+		box.setWindowTitle(tr("MiniWord"));
+		box.setIcon(QMessageBox::Warning);
+		box.setText(tr("是否将更改保存到 ") + curFile + " ?");
+		QPushButton * yesBtn = box.addButton(tr("是(&Y"), QMessageBox::YesRole);
+		box.addButton(tr("否(&N)"), QMessageBox::NoRole);
+		QPushButton * cancelBtn = box.addButton(tr("取消"), QMessageBox::RejectRole);
+		box.exec();
+		if (box.clickedButton() == yesBtn)
+			return save();
+		else if (box.clickedButton() == cancelBtn)
+			return false;
+	}
+	return true;
 }
 bool MainWindow::save()
 {
-    if (isUntitled){
-        return saveAs();
-    } else {
-        return saveFile(curFile);
-    }
+	if (isUntitled){
+		return saveAs();
+	} else {
+		return saveFile(curFile);
+	}
 }
 bool MainWindow::saveAs()
 {
-    QString path = QFileDialog::getSaveFileName(this, tr("另存为"), curFile);
-    if (path.isEmpty()) return false;
+	QString path = QFileDialog::getSaveFileName(this, tr("另存为"), curFile);
+	qDebug() << path;
+	if (path.isEmpty()) return false;
 	return saveFile(path);
 }
 bool MainWindow::saveFile(const QString &path)
 {
-    QFile file(path);
-    if (!file.open(QFile::WriteOnly | QFile::Text)){
-        QMessageBox::warning(this, tr("MiniWord"), tr("打开文件失败"));
-        return false;
-    }
-    QTextStream out(&file);
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    //todo:save data
-    //format: out << string;
-    QApplication::restoreOverrideCursor();
-    isUntitled = false;
-    curFile = QFileInfo(path).canonicalFilePath();
-    setWindowTitle(curFile + tr(" - MiniWord"));
-    return true;
+	QFile file(path);
+	if (!file.open(QFile::WriteOnly | QFile::Text)){
+		QMessageBox::warning(this, tr("MiniWord"), tr("打开文件失败"));
+		return false;
+	}
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+
+	//save data
+	data.save(path);
+
+	QApplication::restoreOverrideCursor();
+	isUntitled = false;
+	curFile = QFileInfo(path).canonicalFilePath();
+	setWindowTitle(curFile + tr(" - MiniWord"));
+	return true;
 }
 bool MainWindow::openFile(const QString &path)
 {
-    QFile file(path);
-    if (!file.open(QFile::ReadOnly | QFile::Text)){
-        QMessageBox::warning(this, tr("MiniWord"), tr("无法打开文件"));
-        return false;
-    }
-    QTextStream in(&file);
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    //todo:load data
-    //format: in >> string
-    QApplication::restoreOverrideCursor();
-    curFile = QFileInfo(path).canonicalFilePath();
-    setWindowTitle(curFile + tr(" - MiniWord"));
-    return true;
+	QFile file(path);
+	if (!file.open(QFile::ReadOnly | QFile::Text)){
+		QMessageBox::warning(this, tr("MiniWord"), tr("无法打开文件"));
+		return false;
+	}
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+
+	//load data
+	data.clear();
+	data.read(path);
+
+	QApplication::restoreOverrideCursor();
+	curFile = QFileInfo(path).canonicalFilePath();
+	setWindowTitle(curFile + tr(" - MiniWord"));
+	shouldSave = false;
+	return true;
 }
-
-
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (maybeSave()){
-        event->accept();//close window
-    } else {
-        event->ignore();//not close window
-    }
+	if (maybeSave()){
+		event->accept();//close window
+	} else {
+		event->ignore();//not close window
+	}
 }
-
-
 
 void MainWindow::keyPressEvent(QKeyEvent * ev)
 {
@@ -195,7 +199,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		IsNeededFindCursor = true;
 
 		break;
-    case Qt::Key_Backspace :
+	case Qt::Key_Backspace :
 		if(PosCur.DataPos==PosPre.DataPos){
 			if(PosCur.ShowPosY < 0){
 				FindCursor();
@@ -223,9 +227,9 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		RefreshShowPos();
 		IsNeededFindCursor = true;
 
-        break;
-    case Qt::Key_Enter :
-    case Qt::Key_Return :
+		break;
+	case Qt::Key_Enter :
+	case Qt::Key_Return :
 
 		PosCur.ShowPosY++;
 		PosCur.ShowPosX=0;
@@ -233,8 +237,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		PosPre = PosCur;
 		IsNeededFindCursor = true;
 
-        break;
-    case Qt::Key_Delete :
+		break;
+	case Qt::Key_Delete :
 		if(PosCur.DataPos==PosPre.DataPos){
 			if(PosCur.ShowPosY < 0){
 				FindCursor();
@@ -259,7 +263,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		RefreshShowPos();
 		IsNeededFindCursor = true;
 
-        break;
+		break;
 	case Qt::Key_Up :
 		if(PosCur.ShowPosY>0){
 			LocateCursor(PosCur.ShowPosX,PosCur.ShowPosY-1);
@@ -273,8 +277,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 			}
 		}
 		ProtectedUpdate();
-        //todo
-        break;
+		//todo
+		break;
 	case Qt::Key_Down :
 		if(PosCur.ShowPosY<TextBoxHeight-1){
 			if(PosCur.ShowPosY != DataTextHeight-DataTextTop-1){
@@ -290,8 +294,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 			}
 		}
 		ProtectedUpdate();
-        //todo
-        break;
+		//todo
+		break;
 	case Qt::Key_Left :
 		if(QApplication::keyboardModifiers () == Qt::ShiftModifier){
 			PosCur.DataPos--;
@@ -319,7 +323,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		}
 		IsNeededFindCursor = true;
 		ProtectedUpdate();
-        break;
+		break;
 	case Qt::Key_Right :
 		if(QApplication::keyboardModifiers () == Qt::ShiftModifier){
 			PosCur.DataPos++;
@@ -340,14 +344,14 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		RefreshShowPos();
 		IsNeededFindCursor = true;
 		ProtectedUpdate();
-        break;
-    case Qt::Key_Home :
-        //todo
-        break;
-    case Qt::Key_End :
-        //todo
-        break;
-    default :
+		break;
+	case Qt::Key_Home :
+		//todo
+		break;
+	case Qt::Key_End :
+		//todo
+		break;
+	default :
 		if(PosCur.DataPos==PosPre.DataPos)
 		{
 			PosCur.DataPos=data.add(PosCur.DataPos, ev->text());
@@ -357,7 +361,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		RefreshShowPos();
 		IsNeededFindCursor = true;
 		break;
-    }
+	}
 	//QTimer::singleShot(0,this,SLOT(update()));
 }
 void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
@@ -374,18 +378,18 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 }
 void MainWindow::mousePressEvent(QMouseEvent * ev)
 {
-    if (ev->button() == Qt::RightButton){//show right click menu
-        //judge function state
-        if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos){
-            //iterator are overflow or equal
-            cutAction->setDisabled(true);
-            copyAction->setDisabled(true);
-            delAction->setDisabled(true);
-        }
-        //todo if UndoStack is empty then disable undo action
+	if (ev->button() == Qt::RightButton){//show right click menu
+		//judge function state
+		if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos){
+			//iterator are overflow or equal
+			cutAction->setDisabled(true);
+			copyAction->setDisabled(true);
+			delAction->setDisabled(true);
+		}
+		//todo if UndoStack is empty then disable undo action
 		rightMenu->exec(ev->screenPos().toPoint());
-        resetRightMenu();
-    }else if(ev->button() == Qt::LeftButton){
+		resetRightMenu();
+	}else if(ev->button() == Qt::LeftButton){
 		int x = ev->pos().x() - FirstQCharX;
 		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
 		int y = (ev->pos().y() - FirstQCharY)/FontSizeH;
@@ -455,10 +459,10 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
 void MainWindow::paintEvent(QPaintEvent *ev)
 {
-	QPainter MyPainter(this);                                           //A Painter
+	QPainter MyPainter(this);										   //A Painter
 	MyPainter.setFont(QFont("楷体",FontSizeW*10/8));
 
-    int DrawX=0,DrawY=0;                                                //the position to draw text
+	int DrawX=0,DrawY=0;												//the position to draw text
 
 	int newWidth = width() - 65;
 	int newHeigh = height() - 60;
@@ -593,47 +597,47 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 }
 void MainWindow::on_action_New_triggered()
 {
-    newFile();
+	newFile();
 }
 void MainWindow::on_action_Open_triggered()
 {
-    if (maybeSave()){
-    //ok to open file
-        QString path = QFileDialog::getOpenFileName(this);
-        if (!path.isEmpty()){
-            openFile(path);
-        }
-    }
+	if (maybeSave()){
+	//ok to open file
+		QString path = QFileDialog::getOpenFileName(this);
+		if (!path.isEmpty()){
+			openFile(path);
+		}
+	}
 }
 void MainWindow::on_action_Save_triggered()
 {
-    save();
+	save();
 }
 void MainWindow::on_action_SaveAs_triggered()
 {
-    saveAs();
+	saveAs();
 }
 void MainWindow::on_action_Exit_triggered()
 {
-    if (maybeSave()){
-        qApp->quit();//equal to exit(0)
-    }
+	if (maybeSave()){
+		qApp->quit();//equal to exit(0)
+	}
 }
 void MainWindow::on_action_Undo_triggered()
 {
-    //todo
+	//todo
 }
 void MainWindow::on_action_Cut_triggered()
 {
-    //todo
+	//todo
 }
 void MainWindow::on_action_Copy_triggered()
 {
-    //todo
+	//todo
 }
 void MainWindow::on_action_Paste_triggered()
 {
-    //todo
+	//todo
 }
 void MainWindow::on_action_Delete_triggered()
 {
@@ -666,38 +670,45 @@ void MainWindow::on_action_Delete_triggered()
 }
 void MainWindow::on_action_Find_triggered()
 {
-    replaceDlg->show();
+	replaceDlg->show();
 }
 void MainWindow::on_action_FindNext_triggered()
 {
-    PosCur.DataPos = data.find(PosCur.DataPos, replaceDlg->findLeText());
+	PosCur.DataPos = data.find(PosCur.DataPos, replaceDlg->findLeText());
 }
 void MainWindow::on_action_Replace_triggered()
 {
-    replaceDlg->show();
+	replaceDlg->show();
 }
 void MainWindow::getMenu_E_state()
 {
-    //active all action
-    ui->action_Undo->setDisabled(false);
-    ui->action_Cut->setDisabled(false);
-    ui->action_Copy->setDisabled(false);
-    ui->action_Paste->setDisabled(false);
-    ui->action_Delete->setDisabled(false);
-    ui->action_Find->setDisabled(false);
-    ui->action_FindNext->setDisabled(false);
-    ui->action_Replace->setDisabled(false);
-    //judge function state
+	//active all action
+	ui->action_Undo->setDisabled(false);
+	ui->action_Cut->setDisabled(false);
+	ui->action_Copy->setDisabled(false);
+	ui->action_Paste->setDisabled(false);
+	ui->action_Delete->setDisabled(false);
+	ui->action_Find->setDisabled(false);
+	ui->action_FindNext->setDisabled(false);
+	ui->action_Replace->setDisabled(false);
+	//judge function state
 	if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos){
-        ui->action_Cut->setDisabled(true);
-        ui->action_Copy->setDisabled(true);
-        ui->action_Delete->setDisabled(true);
-    }
-    //todo if UndoStack is empty then disable undo action
-    //judge replacedlg
-    if (!replaceDlg->findLeText().length()){
-        ui->action_FindNext->setDisabled(true);
+		ui->action_Cut->setDisabled(true);
+		ui->action_Copy->setDisabled(true);
+		ui->action_Delete->setDisabled(true);
 	}
+	//todo if UndoStack is empty then disable undo action
+	//judge replacedlg
+	if (!replaceDlg->findLeText().length()){
+		ui->action_FindNext->setDisabled(true);
+	}
+}
+
+void MainWindow::getDataChanged()
+{
+	shouldSave = true;
+	if (isUntitled) return;
+	setWindowTitle(curFile + '*' + " - MiniWord");
 }
 
 void MainWindow::RefreshShowPos()
