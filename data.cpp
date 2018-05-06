@@ -2,6 +2,8 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QTextStream>
+#include <QApplication>
+#include <QClipboard>
 
 #include <QDebug>
 
@@ -350,16 +352,35 @@ Data::iterator Data::find(const Data::iterator & startLocate, const QString & st
 Data::iterator Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
 	//todo
+	QString str;
+	auto i = startLocate;
+	while(i != endLocate)
+	{
+		str.append(*i);
+		++i;
+	}
+	QApplication::clipboard()->setText(str);
+	return del(startLocate,endLocate);
 }
 
 Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
 	//todo
+	QString str;
+	auto i = startLocate;
+	while(i != endLocate)
+	{
+		str.append(*i);
+		++i;
+	}
+	QApplication::clipboard()->setText(str);
+	return begin();
 }
 
 Data::iterator Data::paste(const Data::iterator & locate)
 {
 	//todo
+	return add(locate,QApplication::clipboard()->text());
 }
 
 void Data::clear()
@@ -385,10 +406,13 @@ void Data::save(const QString &pathAndName)
 	QTextStream out(&file);
 
 	auto i = begin();
+	i.clear();
 	while (i){
 		out << *i;
 		++i;
 	}
+
+	file.close();
 }
 
 void Data::read(const QString &pathAndName)
@@ -406,6 +430,8 @@ void Data::read(const QString &pathAndName)
 		buf = in.read(100);
 		add(end(), buf);
 	}
+
+	file.close();
 }
 
 //void Data::iterator::move(int unitWidthCount, int windowUnitCount)
@@ -451,7 +477,7 @@ Data::iterator Data::iterator::operator++()
 				m_parentHeap = m_parentNode->firstHeap;
 				m_index = 0;
 			} else {//no next node
-				qDebug() << "Data::iterator::operator++::overflow";
+				//qDebug() << "Data::iterator::operator++::overflow";
 				overflow = true;
 				--m_index;
 			}
@@ -480,7 +506,7 @@ Data::iterator Data::iterator::operator--()
 				m_parentHeap = m_parentNode->lastHeap();
 				m_index = m_parentHeap->charNum - 1;
 			} else {//no previous node
-				qDebug() << "Data::iterator::operator--::overflow";
+				//qDebug() << "Data::iterator::operator--::overflow";
 				overflow = true;
 				++m_index;
 			}
@@ -527,7 +553,7 @@ Data::iterator Data::iterator::operator=(const Data::iterator & another)
 
 bool Data::iterator::operator==(const Data::iterator & another) const
 {
-	if (overflow || another.overflow) return false;
+	//if (overflow || another.overflow) return false;
 	return m_parentNode == another.m_parentNode && m_parentHeap == another.m_parentHeap && m_index == another.m_index;
 }
 
