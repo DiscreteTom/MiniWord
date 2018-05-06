@@ -98,7 +98,8 @@ void MainWindow::newFile()
 		isUntitled = true;
 		shouldSave = false;
 		//todo: move iterator
-		//PosCur.DataPos = PosPre.DataPos = data.begin();
+		PosLeftUp.DataPos = PosCur.DataPos = PosPre.DataPos = data.begin();
+		RefreshShowPos();
 	}
 }
 
