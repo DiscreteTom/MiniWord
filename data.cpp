@@ -303,6 +303,12 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 			hindLocate = startLocate;
 		}
 
+		auto result = frontLocate;
+		bool flag = (frontLocate - 1);
+		if (flag){
+			--result;
+		}
+
 		//move chars
 		hindLocate.parentHeap()->moveToNextHeap(hindLocate.index());
 		//cut
@@ -331,16 +337,17 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 
 		emit WindowUdate();
 		emit dataChanged();
-		return frontLocate + 1;
+		if (flag){
+			return result + 1;
+		} else {
+			return begin();
+		}
 	}
 }
 
 Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
 {
 	auto t = del(startLocate, endLocate);
-	if (t - 1){
-		--t;
-	}
 	t = add(t, str);
 	return t;
 }
