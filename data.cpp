@@ -338,6 +338,9 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterator & endLocate, const QString & str)
 {
 	auto t = del(startLocate, endLocate);
+	if (t - 1){
+		--t;
+	}
 	t = add(t, str);
 	return t;
 }
@@ -782,12 +785,12 @@ Data::iterator Data::Heap::add(const QString & str, int index)
 		ch[index] = str[0];
 		if (charNum < 100) ++charNum;
 
-			return iterator(parentNode, this, index) + 1;
+		return iterator(parentNode, this, index) + 1;
 	}
 
 	//! a string
 	if (charNum + str.length() <= 100) {//this heap fits
-		for (int i = index; i < charNum; ++i){//move right
+		for (int i = charNum - 1; i >= index; --i){//move right
 			ch[i + str.length()] = ch[i];
 		}
 		for (int i = 0; i < str.length(); ++i){//load string
@@ -801,16 +804,16 @@ Data::iterator Data::Heap::add(const QString & str, int index)
 		int n = 0;//index to str
 		Heap * currentHeap = this;
 		while (n < str.length()){
-			if (index > 99){//currentHeap is full, get a new one
-				currentHeap = parentNode->parent->addHeap(currentHeap);
-				index = 0;
-			}
 			currentHeap->ch[index] = str[n];
 			++currentHeap->charNum;
 			++index;
 			++n;
+			if (index > 99){//currentHeap is full, get a new one
+				currentHeap = parentNode->parent->addHeap(currentHeap);
+				index = 0;
+			}
 		}
-		return iterator(parentNode, currentHeap, index + 1);
+		return iterator(parentNode, currentHeap, index) + 1;
 	}
 }
 
