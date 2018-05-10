@@ -30,7 +30,6 @@ Data::Heap *Data::addHeap(Data::Heap *heapp)
 		heapp->nextHeap->preHeap = newHeap;
 	}
 	heapp->nextHeap = newHeap;
-	//newHeap->parentNode = heapp->parentNode;
 
 	++heapp->parentNode->heapNum;
 	return newHeap;
@@ -231,7 +230,9 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 		int currentIndex = locate.index();
 		QStringList strList = str.split('\n');
 		for (int i = 0; i < strList.length(); ++i){
-			result = currentHeap->add(strList[i], currentIndex);
+			if (str.length()){
+				result = currentHeap->add(strList[i], currentIndex);
+			}
 			if (i != strList.length() - 1){//add \n
 				currentNode = addNode(currentNode);
 				currentHeap = currentNode->firstHeap;
@@ -697,7 +698,6 @@ Data::Heap::Heap(Node *parent)
 
 void Data::Heap::moveToNextHeap(int start)
 {
-	if (start == charNum) return;//not move
 	if (start < 0 || start > charNum - 1) return;//error
 	if (!nextHeap || 100 - nextHeap->charNum < charNum - start){
 		//no nextHeap or next heap is not big enough
@@ -705,7 +705,8 @@ void Data::Heap::moveToNextHeap(int start)
 	}
 
 	for (int i = start; i < charNum; ++i){
-		nextHeap->add(ch[i]);
+		nextHeap->ch[nextHeap->charNum] = ch[i];
+		++nextHeap->charNum;
 	}
 	charNum = start;
 }
