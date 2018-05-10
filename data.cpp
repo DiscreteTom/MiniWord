@@ -704,8 +704,13 @@ void Data::Heap::moveToNextHeap(int start)
 		parentNode->parent->addHeap(this);
 	}
 
+	//next heap move right
+	for (int i = nextHeap->charNum - 1; i >= 0; --i){
+		nextHeap->ch[i + charNum - start] = nextHeap->ch[i];
+	}
+	//load
 	for (int i = start; i < charNum; ++i){
-		nextHeap->ch[nextHeap->charNum] = ch[i];
+		nextHeap->ch[i - start] = ch[i];
 		++nextHeap->charNum;
 	}
 	charNum = start;
