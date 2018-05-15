@@ -5,6 +5,7 @@
 #include <QChar>
 #include <QString>
 #include <QStack>
+#include <QVector>
 
 class Data : public QObject
 {
@@ -38,6 +39,7 @@ private:
 		void move(int start, int offset);//offset must be positive, move right, include start
 		iterator add(const QString & str, int index = -1);//if index == -1 then add to the tail, str CAN NOT include \n
 		iterator begin();
+		void del(int index);
 
 		//operator overload
 		QChar operator[](int n) const ;
@@ -63,23 +65,41 @@ private:
 		//------ operator overload ------
 		Heap & operator[](int n);
 	};
-//	class Action{
-//	public:
-//		enum Type{ADD, DEL};
+	class Action{
+	public:
+		enum Type{ADD, DEL};
 
-//	private:
-//		iterator m_locate;
-//		Type m_type;
-//		QString m_str;
-//	public:
-//		Action(iterator locate, Type type, QString str);
-//	};
+		int nodeIndex;
+		int heapIndex;
+		int indexInHeap;
+		Type m_type;
+		QString m_str;
+
+		Action(int locateNode = -1, int locateHeap = -1, int index = -1, Type type = ADD, QString str = "")
+			:nodeIndex(locateNode), heapIndex(locateHeap), indexInHeap(index), m_type(type), m_str(str) {}
+	};
+	class ActionStack{
+	private:
+		QVector<Action> actions;
+		int maxDepth;
+	public:
+		ActionStack(int depth = 20);
+
+		//----- about stack ------
+		void push(Action action);
+		Action pop();
+		void pop(Action & receiver);
+		void clear();
+		int length() const ;
+		void setMaxDepth(int n);
+	};
 
 	//============== private variable =====================
 	int nodeNum;
 	Node * firstNode;
-//	QStack<Action> undoStack;
-//	QStack<Action> redoStack;
+	int stackDepth;
+	ActionStack undoStack;
+	ActionStack redoStack;
 
 	//============== private methods ==============
 	Node * addNode(Node * nodep, Heap * source = NULL);//add a node after nodep
@@ -109,6 +129,10 @@ public:
 		  :m_parentNode(NULL), m_parentHeap(NULL), m_index(-1), overflow(true){}//default ctor set iterator overflow
 		iterator(Node * parentNode, Heap * parentHeap, int index)
 		  :m_parentNode(parentNode), m_parentHeap(parentHeap), m_index(index), overflow(false){}
+
+		//--------- for undo stack --------
+		int parentNodeIndex() const ;//return -1 if error
+		int parentHeapIndex() const ;
 
 		//void move(int unitWidthCount, int windowUnitCount);//unitWidthCount can be minus
 
@@ -141,17 +165,26 @@ public:
 	iterator begin();
 	iterator end();
 	iterator iteratorAt(int parentNodeIndex, int indexInNode);
+	iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
 
 	//========== about text edit ========
-	iterator add(const iterator & locate, const QString & str);
-	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false);
+	iterator add(const iterator & locate, const QString & str, int undo = 0);
+	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, int undo = 0);
 	iterator edit(const iterator & startLocate, const iterator & endLocate, const QString & str);
 	iterator find(const iterator & startLocate, const QString & str);
 	iterator cut(const iterator & startLocate, const iterator & endLocate);
 	iterator copy(const iterator & startLocate, const iterator & endLocate);
 	iterator paste(const iterator & locate);//get string from system clipboard
+	iterator undo(const iterator & now);
+	iterator redo(const iterator & now);
 	void clear();
 	bool isEmpty();
+	QString text(const iterator & startLocate, const iterator & endLocate);
+
+	//=========== about undoStack & redoStack ============
+	bool undoStackEmpty() const {return undoStack.length() == 0;}
+	bool redoStackEmpty() const {return redoStack.length() == 0;}
+	void resetStackSize(int n);
 
 	//========= about file ===========
 	void save(const QString & pathAndName);

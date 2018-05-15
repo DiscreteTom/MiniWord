@@ -141,6 +141,7 @@ Data::Data(QObject *parent) : QObject(parent)
 {
 	firstNode = new Node(this);
 	nodeNum = 1;
+	stackDepth = 20;
 }
 
 Data::~Data()
@@ -193,6 +194,37 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int indexInNode)
 	return iterator(p_node, p_heap, indexInNode);
 }
 
+Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap)
+{
+	//judge overflow
+	if (parentNodeIndex >= nodeNum || parentNodeIndex < 0){
+		qDebug() << "Data::iteratorAt::node overflow";
+		return iterator();
+	}
+	//get node
+	auto p_node = firstNode;
+	while (parentNodeIndex){
+		p_node = p_node->nextNode;
+		--parentNodeIndex;
+	}
+	//judge overflow
+	if (parentHeapIndex >= p_node->heapNum || parentHeapIndex < 0){
+		qDebug() << "Data::iteratorAt:: index overflow";
+		return iterator();
+	}
+	//get heap
+	auto p_heap = p_node->firstHeap;
+	while (parentHeapIndex){
+		p_heap = p_heap->nextHeap;
+		--parentHeapIndex;
+	}
+
+	if (indexInHeap >= p_heap->charNum || indexInHeap < 0){//overflow
+		return iterator();
+	}
+	return iterator(p_node, p_heap, indexInHeap);
+}
+
 Data::Node & Data::operator[](int n)
 {
 	if (n >= nodeNum || n < 0){
@@ -207,12 +239,20 @@ Data::Node & Data::operator[](int n)
 	}
 }
 
-Data::iterator Data::add(const Data::iterator & locate, const QString & str)
+Data::iterator Data::add(const Data::iterator & locate, const QString & str, int undo)
 {
 	//! deal with '\n' in this function
 
-	//todo
-	//undoStack.push(Action(locate, Action::DEL, str));
+	//! undo == 0 normal
+	//! undo == 1 undo
+	//! undo == -1 redo
+
+	if (undo == 1){
+		redoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::DEL, str));
+	} else {
+		undoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::ADD, str));
+		if (!undo) redoStack.clear();//normal
+	}
 
 	iterator result;
 
@@ -246,53 +286,57 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str)
 	return result;
 }
 
-Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind)
+Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterator & endLocate, bool hind, int undo)
 {
-	//todo
-	//undoStack.push(Action(locate, Action::ADD, str));
-
+	//! undo == 0 normal
+	//! undo == 1 undo
+	//! undo == -1 redo
 	if (startLocate == endLocate){//just delete one char
+		iterator result;
 		iterator aim = startLocate;
-		iterator result = startLocate;
-		if (!hind){//delete pre char
-			if (startLocate == begin()){//no pre char
-				emit WindowUdate();;
-				return startLocate;
-			}
-			--aim;
-		} else {//delete this char
-			if (startLocate + 1){//next char exist
-				++result;
-			} else {//this char is the last char of Data
-				emit WindowUdate();
-				return startLocate;
+		if (!hind){
+			//delete pre char
+			if (aim - 1){
+				//pre char exist
+				--aim;
+			} else {
+				//no pre char
+				return aim;
 			}
 		}
-		//now delete aim
+		if (undo == 1){
+			redoStack.push(Action(aim.parentNodeIndex(), aim.parentHeapIndex(), aim.index(), Action::ADD, *aim));
+		} else {
+			undoStack.push(Action(aim.parentNodeIndex(), aim.parentHeapIndex(), aim.index(), Action::DEL, *aim));
+			if (!undo) redoStack.clear();//normal
+		}
+		//! now delete aim
 		if (*aim == '\n'){
-			mergeNextNode(aim.parentNode());//when delete \n just merge
+			mergeNextNode(aim.parentNode());
+			result = aim;
 
 			emit dataChanged();
-			emit WindowUdate();
-			return aim;
-		}
-		for (int i = aim.index(); i < aim.parentHeap()->charNum - 1; ++i){
-			aim.parentHeap()->ch[i] = aim.parentHeap()->ch[i + 1];//move left
-		}
-		--aim.parentHeap()->charNum;
-		//need to delete heap or node?
-		if (!aim.parentHeap()->charNum){
-			delHeap(aim.parentHeap());//auto delete Node and judge empty
+		} else if (aim - 1){
+			result = aim - 1;
+			aim.parentHeap()->del(aim.index());
+			mergeNextHeap(aim.parentHeap());
+			++result;
+
+			emit dataChanged();
+		} else if (aim + 1){
+			result = aim + 1;
+			aim.parentHeap()->del(aim.index());
+			mergeNextHeap(aim.parentHeap());
+			--result;
+
+			emit dataChanged();
+		} else {//this char is the only char, the '\n'
+			result = aim;
 		}
 
-		//if (hind) --result;
-		emit dataChanged();
+
 		emit WindowUdate();
-		if (result - 1){
-			return --result;
-		} else {
-			return result;
-		}
+		return result;
 	} else {//not just delete one char
 		//judge which one is front
 		iterator frontLocate, hindLocate;
@@ -302,6 +346,13 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		} else {
 			frontLocate = endLocate;
 			hindLocate = startLocate;
+		}
+
+		if (undo == 1){
+			redoStack.push(Action(frontLocate.parentNodeIndex(), frontLocate.parentHeapIndex(), frontLocate.index(), Action::ADD, text(startLocate, endLocate)));
+		} else {
+			undoStack.push(Action(frontLocate.parentNodeIndex(), frontLocate.parentHeapIndex(), frontLocate.index(), Action::DEL, text(startLocate, endLocate)));
+			if (!undo) redoStack.clear();//normal
 		}
 
 		auto result = frontLocate;
@@ -362,7 +413,6 @@ Data::iterator Data::find(const Data::iterator & startLocate, const QString & st
 
 Data::iterator Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
-	//todo
 	QString str;
 	auto i = startLocate;
 	while(i != endLocate)
@@ -376,7 +426,6 @@ Data::iterator Data::cut(const Data::iterator & startLocate, const Data::iterato
 
 Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterator & endLocate)
 {
-	//todo
 	QString str;
 	auto i = startLocate;
 	while(i != endLocate)
@@ -390,13 +439,51 @@ Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterat
 
 Data::iterator Data::paste(const Data::iterator & locate)
 {
-	//todo
 	return add(locate,QApplication::clipboard()->text());
+}
+
+Data::iterator Data::undo(const iterator &now)
+{
+	if (undoStack.length()){
+		Action a = undoStack.pop();
+		if (a.m_type == Action::ADD){
+			//need del
+			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
+			iterator result = del(startLocate, startLocate + a.m_str.length(), false, 1);
+			return result;
+		} else if (a.m_type == Action::DEL){
+			//need add
+			iterator result = add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, 1);
+			return result;
+		}
+	} else {
+		return now;
+	}
+}
+
+Data::iterator Data::redo(const Data::iterator &now)
+{
+	if (redoStack.length()){
+		Action a = redoStack.pop();
+		if (a.m_type == Action::DEL){
+			//need del
+			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
+			iterator result = del(startLocate, startLocate + a.m_str.length(), false, -1);
+			return result;
+		} else if (a.m_type == Action::ADD){
+			//need add
+			return add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, -1);
+		}
+	} else {
+		return now;
+	}
 }
 
 void Data::clear()
 {
 	while (!isEmpty()) delNode(firstNode);
+	undoStack.clear();
+	redoStack.clear();
 	emit WindowUdate();
 }
 
@@ -404,6 +491,43 @@ bool Data::isEmpty()
 {
 	if (nodeNum == 1 && firstNode->charNum() == 1) return true;
 	else return false;
+}
+
+QString Data::text(const Data::iterator &startLocate, const Data::iterator &endLocate)
+{
+	//just one char
+	if (startLocate == endLocate){
+		return *startLocate;
+	}
+
+	//judge which iterator is ahead
+	iterator frontLocate, hindLocate;
+	if (startLocate - endLocate >= 0){
+		frontLocate = startLocate;
+		hindLocate = endLocate;
+	} else {
+		frontLocate = endLocate;
+		hindLocate = startLocate;
+	}
+
+	QString str;
+	while (frontLocate != hindLocate){
+		str.append(*frontLocate);
+		++frontLocate;
+	}
+	return str;
+}
+
+void Data::resetStackSize(int n)
+{
+	if (n <= 0){
+		n = 20;
+	}
+	stackDepth = n;
+	undoStack.clear();
+	redoStack.clear();
+	undoStack.setMaxDepth(n);
+	redoStack.setMaxDepth(n);
 }
 
 void Data::save(const QString &pathAndName)
@@ -419,6 +543,9 @@ void Data::save(const QString &pathAndName)
 	auto i = begin();
 	i.clear();
 	while (i){
+		if (i == end()){//ignore the last \n
+			break;
+		}
 		out << *i;
 		++i;
 	}
@@ -464,6 +591,31 @@ void Data::read(const QString &pathAndName)
 //		}
 //	}
 //}
+
+int Data::iterator::parentNodeIndex() const
+{
+	if (this->isOverFlow()) return -1;
+
+	int result = 0;
+	Node * p = parentNode();
+	while (p->preNode){
+		++result;
+		p = p->preNode;
+	}
+	return result;
+}
+
+int Data::iterator::parentHeapIndex() const
+{
+	if (this->isOverFlow()) return -1;
+	int result = 0;
+	Heap * p = parentHeap();
+	while (p->preHeap){
+		++result;
+		p = p->preHeap;
+	}
+	return result;
+}
 
 QChar Data::iterator::operator*() const
 {
@@ -835,6 +987,18 @@ Data::iterator Data::Heap::begin()
 	return iterator(parentNode, this, 0);
 }
 
+void Data::Heap::del(int index)
+{
+	//! just delete one char, other operation will be in Data::del
+	//! ignore '\n' and blank Heap, deal with them in Data::del
+	if (index >= charNum || index < 0) return;//error
+
+	for (int i = index; i < charNum - 1; ++i){
+		ch[i] = ch[i + 1];
+	}
+	--charNum;
+}
+
 //int charWidth(QChar ch)
 //{
 //	if (ch == '\n'){
@@ -846,3 +1010,55 @@ Data::iterator Data::Heap::begin()
 //		return 1;
 //	}
 //}
+
+Data::ActionStack::ActionStack(int depth)
+{
+	maxDepth = depth;
+}
+
+void Data::ActionStack::push(Data::Action action)
+{
+	actions.push_back(action);
+	while (actions.length() > maxDepth){
+		actions.erase(actions.begin());
+	}
+}
+
+Data::Action Data::ActionStack::pop()
+{
+	if (actions.length()){
+		auto result = *(actions.end() - 1);
+		actions.erase(actions.end() - 1);
+		return result;
+	} else {
+		qDebug() << "Data::ActionStack::pop::overflow";
+		return Action();
+	}
+}
+
+void Data::ActionStack::pop(Data::Action &receiver)
+{
+	if (actions.length()){
+		receiver = *(actions.end() - 1);
+		actions.erase(actions.end() - 1);
+	} else {
+		qDebug() << "Data::ActionStack::pop::overflow";
+		receiver = Action();
+	}
+}
+
+void Data::ActionStack::clear()
+{
+	actions.clear();
+}
+
+int Data::ActionStack::length() const
+{
+	return actions.length();
+}
+
+void Data::ActionStack::setMaxDepth(int n)
+{
+	if (n <= 0) n = 20;
+	maxDepth = n;
+}

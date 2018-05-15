@@ -39,6 +39,7 @@
      <string>编辑(&amp;E)</string>
     </property>
     <addaction name="action_Undo"/>
+    <addaction name="action_Redo"/>
     <addaction name="separator"/>
     <addaction name="action_Cut"/>
     <addaction name="action_Copy"/>
@@ -49,8 +50,16 @@
     <addaction name="action_FindNext"/>
     <addaction name="action_Replace"/>
    </widget>
+   <widget class="QMenu" name="menu_H">
+    <property name="title">
+     <string>设置(&amp;S)</string>
+    </property>
+    <addaction name="action_Setting"/>
+    <addaction name="action_Help"/>
+   </widget>
    <addaction name="menu_F"/>
    <addaction name="menu_E"/>
+   <addaction name="menu_H"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -160,6 +169,27 @@
   <action name="action_Replace">
    <property name="text">
     <string>替换(&amp;R)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="action_Redo">
+   <property name="text">
+    <string>重做(&amp;Y)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="action_Setting">
+   <property name="text">
+    <string>系统设置</string>
+   </property>
+  </action>
+  <action name="action_Help">
+   <property name="text">
+    <string>帮助(&amp;H)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>

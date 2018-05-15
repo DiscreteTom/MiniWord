@@ -26,14 +26,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp \
     replacedlg.cpp \
-    data.cpp
+    data.cpp \
+    settingdlg.cpp
 
 HEADERS  += mainwindow.h \
     replacedlg.h \
-    data.h
+    data.h \
+    settingdlg.h
 
 FORMS    += mainwindow.ui \
-    replacedlg.ui
+    replacedlg.ui \
+    settingdlg.ui
 
 DISTFILES += \
     README.md

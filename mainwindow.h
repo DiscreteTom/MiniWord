@@ -15,6 +15,7 @@
 #include <QScrollBar>
 #include "replacedlg.h"
 #include "data.h"
+#include "settingdlg.h"
 
 namespace Ui {
 class MainWindow;
@@ -58,20 +59,26 @@ private slots:
 	void getDataChanged();
 	void ProtectedUpdate();					//保护式刷新
 	void GetDataHeight();					//获取文本高度并更新与显示相关的信息
+	void on_action_Redo_triggered();
+
+	void on_action_Setting_triggered();
+
 private:
     Ui::MainWindow *ui;
     //=================== Object ===============================
     //------------ Right Click Menu-------
     QMenu * rightMenu;
     QAction * undoAction;
+		QAction * redoAction;
     QAction * cutAction;
     QAction * copyAction;
     QAction * pasteAction;
     QAction * delAction;
     QAction * seleteAllAction;
 
-    //----------- replace and find dialog ----------
+		//-----------  dialog ----------
     ReplaceDlg * replaceDlg;
+		SettingDlg * settingsDlg;
 
     //=================== Variable ============================
 
@@ -81,7 +88,7 @@ private:
     QString curFile;
 
     //------------ data ---------
-    Data data;
+		Data data;
 
     //------------ show ---------
 	Pos PosLeftUp;							//最左上角光标
@@ -95,6 +102,7 @@ private:
 	int FontSizeH;							//字体高度
 	int TabWidth;							//Tab宽度
 	bool IsNeededFindCursor;				//判断是否需要定位光标位置
+	bool IsDragged;							//判断是否正在拖动鼠标
 
 	int CursorTimer;						//光标闪烁计时器
 	QTimer MyCursorTimer;					//光标闪烁定时器
@@ -128,11 +136,16 @@ private:
     bool saveAs();
     bool saveFile(const QString & path);
 
+		//----------- about config --------
+		void setConfig() const ;
+		void getConfig();
+
 protected:
     void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
     void keyPressEvent(QKeyEvent * ev);
     void inputMethodEvent(QInputMethodEvent * ev);
     void mousePressEvent(QMouseEvent * ev);
+	void mouseReleaseEvent(QMouseEvent * ev);
 	void mouseDoubleClickEvent(QMouseEvent * ev);
 	void mouseMoveEvent(QMouseEvent * ev);
 	void wheelEvent(QWheelEvent *ev);

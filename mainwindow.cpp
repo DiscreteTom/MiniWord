@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QPushButton>
 #include <QTextStream>
+#include <QDebug>
 
 const int FirstQCharX = 30;
 const int FirstQCharY = 50;
@@ -25,8 +26,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	//================== right click menu ============
 	initRightMenu();
 	connect(ui->menu_E, &QMenu::aboutToShow, this, &MainWindow::getMenu_E_state);
-	//================== replace and find dialog ========
+	//================== dialog ========
 	replaceDlg = new ReplaceDlg(this);
+	settingsDlg = new SettingDlg(this);
+	getConfig();
+	data.resetStackSize(settingsDlg->maxUndoTime());
 	//================= input support ===========
 	setFocusPolicy(Qt::ClickFocus);
 	setAttribute(Qt::WA_InputMethodEnabled, true);
@@ -55,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	FontSizeH = 16;
 	TabWidth = 8;
 	IsNeededFindCursor = false;
+	IsDragged = false;
 
 	CursorTimer = 0;
 	ProtectedUpdateTimer=1;
@@ -70,6 +75,7 @@ void MainWindow::initRightMenu()
 	//get object
 	rightMenu = new QMenu(this);
 	undoAction = new QAction(tr("撤销(&U)"), this);
+	redoAction = new QAction(tr("重做(&R)"), this);
 	cutAction = new QAction(tr("剪切(&T)"), this);
 	copyAction = new QAction(tr("复制(&C)"), this);
 	pasteAction = new QAction(tr("粘贴(&P)"), this);
@@ -78,6 +84,7 @@ void MainWindow::initRightMenu()
 
 	//connect
 	connect(undoAction, &QAction::triggered, this, &MainWindow::on_action_Undo_triggered);
+	connect(redoAction, &QAction::triggered, this, &MainWindow::on_action_Redo_triggered);
 	connect(cutAction, &QAction::triggered, this, &MainWindow::on_action_Cut_triggered);
 	connect(copyAction, &QAction::triggered, this, &MainWindow::on_action_Copy_triggered);
 	connect(pasteAction, &QAction::triggered, this, &MainWindow::on_action_Paste_triggered);
@@ -86,6 +93,7 @@ void MainWindow::initRightMenu()
 
     //setup ui
     rightMenu->addAction(undoAction);
+		rightMenu->addAction(redoAction);
     rightMenu->addSeparator();
     rightMenu->addAction(cutAction);
     rightMenu->addAction(copyAction);
@@ -98,6 +106,7 @@ void MainWindow::resetRightMenu()
 {
     //activate all methods
     undoAction->setDisabled(false);
+		redoAction->setDisabled(false);
     cutAction->setDisabled(false);
     copyAction->setDisabled(false);
     pasteAction->setDisabled(false);
@@ -164,7 +173,48 @@ bool MainWindow::saveFile(const QString &path)
 	shouldSave = false;
     curFile = QFileInfo(path).canonicalFilePath();
     setWindowTitle(curFile + tr(" - MiniWord"));
-    return true;
+		return true;
+}
+
+void MainWindow::setConfig() const
+{
+	//! file format
+	//! maxUndoTime
+	//! defaultFontSize
+	QFile file("config");
+	if (!file.open(QFile::WriteOnly | QFile::Text)){
+		qDebug() << "Mainwindow::setConfig::can not open file";
+	}
+	QTextStream out(&file);
+
+	out << settingsDlg->maxUndoTime() << endl;
+	out << settingsDlg->defaultFontSize() << endl;
+
+	file.close();
+}
+
+void MainWindow::getConfig()
+{
+	//! file format
+	//! maxUndoTime
+	//! defaultFontSize
+	QFile file("config");
+	if (!file.open(QFile::ReadOnly | QFile::Text)){
+		qDebug() << "Mainwindow::getConfig::can not open file";
+
+		settingsDlg->setMaxUndoTime(20);
+		settingsDlg->setDefaultFontSize(20);
+		return;
+	}
+	QTextStream in(&file);
+
+	int n;
+	in >> n;
+	settingsDlg->setMaxUndoTime(n);
+	in >> n;
+	settingsDlg->setDefaultFontSize(n);
+
+	file.close();
 }
 bool MainWindow::openFile(const QString &path)
 {
@@ -440,20 +490,31 @@ void MainWindow::mousePressEvent(QMouseEvent * ev)
             copyAction->setDisabled(true);
             delAction->setDisabled(true);
         }
-        //todo if UndoStack is empty then disable undo action
+				if (data.undoStackEmpty()){
+					undoAction->setDisabled(true);
+				}
+				if (data.redoStackEmpty()){
+					redoAction->setDisabled(true);
+				}
 		rightMenu->exec(ev->screenPos().toPoint());
         resetRightMenu();
-    }else if(ev->button() == Qt::LeftButton){
+	}else if(ev->button() == Qt::LeftButton){
 		int x = ev->pos().x() - FirstQCharX;
-		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
 		int y = (ev->pos().y() - FirstQCharY)/FontSizeH;
+		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
 		y = (y>TextBoxHeight-1?TextBoxHeight-1:y);
 		LocateCursor(x,y);
 		PosPre = PosCur;
 		CursorTimer=1;
 		MyCursorTimer.start(700);
 		ProtectedUpdate();
+		IsDragged = true;
 	}
+}
+
+void MainWindow::mouseReleaseEvent(QMouseEvent *ev)
+{
+	IsDragged = false;
 }
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev)
 {
@@ -462,6 +523,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev)
 		RefreshShowPos();
 		ProtectedUpdate();
 	}
+	IsDragged = false;
 }
 void MainWindow::mouseMoveEvent(QMouseEvent *ev)
 {
@@ -475,7 +537,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *ev)
 		setCursor(Qt::ArrowCursor);
 	}
 
-	if((ev->buttons() & Qt::LeftButton)){
+	if((ev->buttons() & Qt::LeftButton) && IsDragged){
 		if(x<0)x=0;
 		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
 		if(y<0)LocateLeftUpCursor(DataTextTop-1);
@@ -689,7 +751,8 @@ void MainWindow::on_action_Exit_triggered()
 }
 void MainWindow::on_action_Undo_triggered()
 {
-    //todo
+	PosPre.DataPos = PosCur.DataPos = data.undo(PosCur.DataPos);
+	RefreshShowPos();
 }
 void MainWindow::on_action_Cut_triggered()
 {
@@ -793,7 +856,12 @@ void MainWindow::getMenu_E_state()
         ui->action_Copy->setDisabled(true);
         ui->action_Delete->setDisabled(true);
     }
-    //todo if UndoStack is empty then disable undo action
+		if (data.undoStackEmpty()){
+			ui->action_Undo->setDisabled(true);
+		}
+		if (data.redoStackEmpty()){
+			ui->action_Redo->setDisabled(true);
+		}
     //judge replacedlg
     if (!replaceDlg->findLeText().length()){
         ui->action_FindNext->setDisabled(true);
@@ -1219,5 +1287,19 @@ void MainWindow::ProtectedUpdate()
 		QTimer::singleShot(31,this,SLOT(update()));
 	}else{
 		//qDebug("Protect!");
+	}
+}
+
+void MainWindow::on_action_Redo_triggered()
+{
+	PosPre.DataPos = PosCur.DataPos = data.redo(PosCur.DataPos);
+	RefreshShowPos();
+}
+
+void MainWindow::on_action_Setting_triggered()
+{
+	if (settingsDlg->exec() == QDialog::Accepted){
+		setConfig();
+		data.resetStackSize(settingsDlg->maxUndoTime());
 	}
 }
