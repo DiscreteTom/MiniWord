@@ -16,9 +16,15 @@ public:
 	~SettingDlg();
 
 	void setMaxUndoTime(int n);
-	void setDefaultFontSize(int n);
+	void setFontSize(int n);
+	void setTabSize(int n);
+	void setTabStyle(int n);
+	void setSpaceStyle(int n);
 	int maxUndoTime() const ;
 	int defaultFontSize() const ;
+	int tabSize() const ;
+	int tabStyle() const ;
+	int spaceStyle() const ;
 private:
 	Ui::SettingDlg *ui;
 };

@@ -101,6 +101,8 @@ private:
 	int FontSizeW;							//字体宽度
 	int FontSizeH;							//字体高度
 	int TabWidth;							//Tab宽度
+	int TabStyle;
+	int SpaceStyle;
 	bool IsNeededFindCursor;				//判断是否需要定位光标位置
 	bool IsDragged;							//判断是否正在拖动鼠标
 

@@ -181,6 +181,9 @@ void MainWindow::setConfig() const
 	//! file format
 	//! maxUndoTime
 	//! defaultFontSize
+	//! spaceStyle
+	//! tabSize
+	//! tabStyle
 	QFile file("config");
 	if (!file.open(QFile::WriteOnly | QFile::Text)){
 		qDebug() << "Mainwindow::setConfig::can not open file";
@@ -189,6 +192,9 @@ void MainWindow::setConfig() const
 
 	out << settingsDlg->maxUndoTime() << endl;
 	out << settingsDlg->defaultFontSize() << endl;
+	out << settingsDlg->spaceStyle() << endl;
+	out << settingsDlg->tabSize() << endl;
+	out << settingsDlg->tabStyle() << endl;
 
 	file.close();
 }
@@ -198,12 +204,15 @@ void MainWindow::getConfig()
 	//! file format
 	//! maxUndoTime
 	//! defaultFontSize
+	//! spaceStyle
+	//! tabSize
+	//! tabStyle
 	QFile file("config");
 	if (!file.open(QFile::ReadOnly | QFile::Text)){
 		qDebug() << "Mainwindow::getConfig::can not open file";
 
 		settingsDlg->setMaxUndoTime(20);
-		settingsDlg->setDefaultFontSize(20);
+		settingsDlg->setFontSize(20);
 		return;
 	}
 	QTextStream in(&file);
@@ -212,7 +221,13 @@ void MainWindow::getConfig()
 	in >> n;
 	settingsDlg->setMaxUndoTime(n);
 	in >> n;
-	settingsDlg->setDefaultFontSize(n);
+	settingsDlg->setFontSize(n);
+	in >> n;
+	settingsDlg->setSpaceStyle(n);
+	in >> n;
+	settingsDlg->setTabSize(n);
+	in >> n;
+	settingsDlg->setTabStyle(n);
 
 	file.close();
 }
