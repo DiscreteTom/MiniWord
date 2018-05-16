@@ -969,14 +969,14 @@ Data::iterator Data::Heap::add(const QString & str, int index)
 		int n = 0;//index to str
 		Heap * currentHeap = this;
 		while (n < str.length()){
-			currentHeap->ch[index] = str[n];
-			++currentHeap->charNum;
-			++index;
-			++n;
 			if (index > 99){//currentHeap is full, get a new one
 				currentHeap = parentNode->parent->addHeap(currentHeap);
 				index = 0;
 			}
+			currentHeap->ch[index] = str[n];
+			++currentHeap->charNum;
+			++index;
+			++n;
 		}
 		return iterator(parentNode, currentHeap, index) + 1;
 	}

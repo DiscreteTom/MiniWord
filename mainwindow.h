@@ -43,6 +43,7 @@ private slots:
 
     //=============== about text ==================
     void on_action_Undo_triggered();
+	void on_action_Redo_triggered();
     void on_action_Cut_triggered();
     void on_action_Copy_triggered();
     void on_action_Paste_triggered();
@@ -50,6 +51,8 @@ private slots:
     void on_action_Find_triggered();
     void on_action_FindNext_triggered();
     void on_action_Replace_triggered();
+	void on_action_SelectAll_triggered();
+	void on_action_Setting_triggered();
 
     //============== about menu ==============
     void getMenu_E_state();
@@ -59,9 +62,7 @@ private slots:
 	void getDataChanged();
 	void ProtectedUpdate();					//保护式刷新
 	void GetDataHeight();					//获取文本高度并更新与显示相关的信息
-	void on_action_Redo_triggered();
 
-	void on_action_Setting_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -69,16 +70,16 @@ private:
     //------------ Right Click Menu-------
     QMenu * rightMenu;
     QAction * undoAction;
-		QAction * redoAction;
+	QAction * redoAction;
     QAction * cutAction;
     QAction * copyAction;
     QAction * pasteAction;
     QAction * delAction;
     QAction * seleteAllAction;
 
-		//-----------  dialog ----------
+    //----------- replace and find dialog ----------
     ReplaceDlg * replaceDlg;
-		SettingDlg * settingsDlg;
+	SettingDlg * settingsDlg;
 
     //=================== Variable ============================
 
@@ -88,7 +89,7 @@ private:
     QString curFile;
 
     //------------ data ---------
-		Data data;
+    Data data;
 
     //------------ show ---------
 	Pos PosLeftUp;							//最左上角光标
@@ -100,9 +101,10 @@ private:
 	int TextBoxWidth;						//文本框顶部
 	int FontSizeW;							//字体宽度
 	int FontSizeH;							//字体高度
+	int SpaceStyle;							//空格样式
 	int TabWidth;							//Tab宽度
-	int TabStyle;
-	int SpaceStyle;
+	int TabStyle;							//Tab样式
+
 	bool IsNeededFindCursor;				//判断是否需要定位光标位置
 	bool IsDragged;							//判断是否正在拖动鼠标
 
@@ -138,9 +140,9 @@ private:
     bool saveAs();
     bool saveFile(const QString & path);
 
-		//----------- about config --------
-		void setConfig() const ;
-		void getConfig();
+	//----------- about config --------
+	void setConfig() const ;
+	void getConfig();
 
 protected:
     void closeEvent(QCloseEvent * event);//intercept window close event(to save file)
