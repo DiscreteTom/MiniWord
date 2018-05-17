@@ -8,6 +8,7 @@ SettingDlg::SettingDlg(QWidget *parent) :
 	ui->setupUi(this);
 
 	setWindowTitle(tr("设置"));
+	ui->defaultFontSizeSb->setRange(1, 9);
 }
 
 SettingDlg::~SettingDlg()
@@ -43,6 +44,7 @@ void SettingDlg::setSpaceStyle(int n)
 
 void SettingDlg::setFontSize(int n)
 {
+	if (n < 1 || n > 9) n = 1;
 	ui->defaultFontSizeSb->setValue(n);
 }
 

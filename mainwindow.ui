@@ -49,6 +49,8 @@
     <addaction name="action_Find"/>
     <addaction name="action_FindNext"/>
     <addaction name="action_Replace"/>
+    <addaction name="separator"/>
+    <addaction name="action_SelectAll"/>
    </widget>
    <widget class="QMenu" name="menu_H">
     <property name="title">
@@ -193,6 +195,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="action_SelectAll">
+   <property name="text">
+    <string>全选(&amp;A)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
    </property>
   </action>
  </widget>
