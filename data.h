@@ -185,6 +185,7 @@ public:
 	bool undoStackEmpty() const {return undoStack.length() == 0;}
 	bool redoStackEmpty() const {return redoStack.length() == 0;}
 	void resetStackSize(int n);
+	void clearStack();
 
 	//========= about file ===========
 	void save(const QString & pathAndName);

@@ -123,6 +123,8 @@ void MainWindow::newFile()
         shouldSave = false;
 		PosLeftUp.DataPos = PosCur.DataPos = PosPre.DataPos = data.begin();
 		RefreshShowPos();
+
+		data.clearStack();
     }
 }
 
@@ -879,6 +881,8 @@ void MainWindow::on_action_Open_triggered()
         }
 		connect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(GetDataHeight()));
     }
+
+	data.clearStack();
 }
 void MainWindow::on_action_Save_triggered()
 {

@@ -530,6 +530,12 @@ void Data::resetStackSize(int n)
 	redoStack.setMaxDepth(n);
 }
 
+void Data::clearStack()
+{
+	undoStack.clear();
+	redoStack.clear();
+}
+
 void Data::save(const QString &pathAndName)
 {
 	QFile file(pathAndName);
