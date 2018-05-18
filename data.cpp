@@ -274,7 +274,8 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str, int
 				result = currentHeap->add(strList[i], currentIndex);
 			}
 			if (i != strList.length() - 1){//add \n
-				currentNode = addNode(currentNode);
+				result.parentHeap()->moveToNewNode(result.index());
+				currentNode = result.parentNode()->nextNode;
 				currentHeap = currentNode->firstHeap;
 				currentIndex = 0;
 			}
@@ -304,16 +305,18 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 				return aim;
 			}
 		}
-		if (undo == 1){
-			redoStack.push(Action(aim.parentNodeIndex(), aim.parentHeapIndex(), aim.index(), Action::ADD, *aim));
-		} else {
-			undoStack.push(Action(aim.parentNodeIndex(), aim.parentHeapIndex(), aim.index(), Action::DEL, *aim));
-			if (!undo) redoStack.clear();//normal
-		}
 		//! now delete aim
+		auto aimChar = *aim;
 		if (*aim == '\n'){
-			mergeNextNode(aim.parentNode());
-			result = aim;
+			if (aim - 1){
+				result = aim - 1;
+				mergeNextNode(aim.parentNode());
+				++result;
+			} else {
+				//aim is the first char and is '\n'
+				mergeNextNode(aim.parentNode());
+				result = begin();
+			}
 
 			emit dataChanged();
 		} else if (aim - 1){
@@ -334,6 +337,12 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 			result = aim;
 		}
 
+		if (undo == 1){
+			redoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::ADD, aimChar));
+		} else {
+			undoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::DEL, aimChar));
+			if (!undo) redoStack.clear();//normal
+		}
 
 		emit WindowUdate();
 		return result;
@@ -348,12 +357,7 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 			hindLocate = startLocate;
 		}
 
-		if (undo == 1){
-			redoStack.push(Action(frontLocate.parentNodeIndex(), frontLocate.parentHeapIndex(), frontLocate.index(), Action::ADD, text(startLocate, endLocate)));
-		} else {
-			undoStack.push(Action(frontLocate.parentNodeIndex(), frontLocate.parentHeapIndex(), frontLocate.index(), Action::DEL, text(startLocate, endLocate)));
-			if (!undo) redoStack.clear();//normal
-		}
+		QString resultString = text(frontLocate, hindLocate);
 
 		auto result = frontLocate;
 		bool flag = (frontLocate - 1);
@@ -379,8 +383,12 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 				delNode(frontLocate.parentNode()->nextNode);
 			}
 			while (hindLocate.parentNode()->firstHeap != hindLocate.parentHeap()){
-				//delete middle heap
+				//delete middle heap before hindLocate
 				delHeap(hindLocate.parentNode()->firstHeap);
+			}
+			while (frontLocate.parentHeap()->nextHeap){
+				//delete middle heap after frontLocate
+				delHeap(frontLocate.parentHeap()->nextHeap);
 			}
 			delHeap(hindLocate.parentHeap());
 			mergeNextNode(frontLocate.parentNode());
@@ -390,10 +398,17 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		emit WindowUdate();
 		emit dataChanged();
 		if (flag){
-			return result + 1;
+			++result;
 		} else {
-			return begin();
+			result = begin();
 		}
+		if (undo == 1){
+			redoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::ADD, resultString));
+		} else {
+			undoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::DEL, resultString));
+			if (!undo) redoStack.clear();//normal
+		}
+		return result;
 	}
 }
 

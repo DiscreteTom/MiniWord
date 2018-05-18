@@ -237,6 +237,7 @@ void MainWindow::getConfig()
 	SpaceStyle = n;
 	in >> n;
 	settingsDlg->setTabSize(n);
+	if (n <= 0) n = 4;
 	TabWidth = n;
 	in >> n;
 	settingsDlg->setTabStyle(n);
