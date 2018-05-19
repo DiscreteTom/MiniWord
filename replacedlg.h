@@ -14,7 +14,14 @@ public:
 	~ReplaceDlg();
 	QString findLeText() const ;
 	QString replaceLeText() const ;
+signals:
+	void FindNext();
+	void Replace();
+	void ReplaceAll();
 private slots:
+	void on_findNextBtn_clicked();
+	void on_replaceBtn_clicked();
+	void on_replaceAllBtn_clicked();
 	void on_cancelBtn_clicked();
 private:
 

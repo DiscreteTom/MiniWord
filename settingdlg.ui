@@ -41,7 +41,7 @@
    <property name="title">
     <string>空格样式：</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -73,9 +73,6 @@
      </item>
     </layout>
    </widget>
-   <zorder>spaceStyle1Rdo</zorder>
-   <zorder>spaceStyle2Rdo</zorder>
-   <zorder></zorder>
   </widget>
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
@@ -89,7 +86,7 @@
    <property name="title">
     <string>Tab样式：</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -131,11 +128,8 @@
      </item>
     </layout>
    </widget>
-   <zorder></zorder>
-   <zorder>tabStyle3Rdo</zorder>
-   <zorder></zorder>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -157,7 +151,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="maxUndoTimeSb"/>
+         <widget class="QSpinBox" name="maxUndoTimeSb">
+          <property name="minimum">
+           <number>20</number>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -171,7 +169,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="defaultFontSizeSb"/>
+         <widget class="QSpinBox" name="defaultFontSizeSb">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>9</number>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -187,7 +192,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="tabSizeSb"/>
+       <widget class="QSpinBox" name="tabSizeSb">
+        <property name="minimum">
+         <number>2</number>
+        </property>
+        <property name="maximum">
+         <number>16</number>
+        </property>
+        <property name="value">
+         <number>4</number>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -195,19 +210,8 @@
   </widget>
   <zorder>buttonBox</zorder>
   <zorder>layoutWidget</zorder>
-  <zorder>label_4</zorder>
-  <zorder>tabSizeSb</zorder>
-  <zorder>label_4</zorder>
   <zorder>groupBox</zorder>
   <zorder>groupBox_2</zorder>
-  <zorder>spaceStyle1Rdo</zorder>
-  <zorder>spaceStyle2Rdo</zorder>
-  <zorder>tabStyle1Rdo</zorder>
-  <zorder>tabStyle2Rdo</zorder>
-  <zorder>tabStyle3Rdo</zorder>
-  <zorder>spaceStyle2Rdo</zorder>
-  <zorder>spaceStyle1Rdo</zorder>
-  <zorder>spaceStyle2Rdo</zorder>
  </widget>
  <resources/>
  <connections>

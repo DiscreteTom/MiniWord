@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QPushButton>
 #include <QTextStream>
+#include <QStandardPaths>
 
 const int FirstQCharX = 30;
 const int FirstQCharY = 50;
@@ -22,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	shouldSave = false;
 	curFile = tr("无标题.txt");
 	setWindowTitle(curFile + tr(" - MiniWord"));
+	setWindowIcon(QIcon("MiniWord.ico"));
 	connect(&data, &Data::dataChanged, this, &MainWindow::getDataChanged);
 	//================== right click menu ============
 	initRightMenu();
@@ -31,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	settingsDlg = new SettingDlg(this);
 	getConfig();
 	data.resetStackSize(settingsDlg->maxUndoTime());
+	connect(replaceDlg,SIGNAL(FindNext()),this,SLOT(on_action_FindNext_triggered()));
+	connect(replaceDlg,SIGNAL(Replace()),this,SLOT(data_replace()));
+	connect(replaceDlg,SIGNAL(ReplaceAll()),this,SLOT(data_replace_all()));
 
 	//================= input support ===========
 	setFocusPolicy(Qt::ClickFocus);
@@ -42,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	MyCursorTimer.start(700);
 	MyProtectedUpdateTimer.start(30);
 
-	connect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(GetDataHeight()));
+	connect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(RefreshProtectTimer()));
 	connect(&data,SIGNAL(WindowUdate()),this,SLOT(ProtectedUpdate()));
 	connect(&MyCursorTimer, SIGNAL(timeout()),this,SLOT(ProtectedUpdate()));
 
@@ -57,7 +62,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	TextBoxHeight = 20;
 	TextBoxWidth = 1000;
 
-	IsNeededFindCursor = false;
 	IsDragged = false;
 
 	CursorTimer = 0;
@@ -122,8 +126,7 @@ void MainWindow::newFile()
         isUntitled = true;
         shouldSave = false;
 		PosLeftUp.DataPos = PosCur.DataPos = PosPre.DataPos = data.begin();
-		RefreshShowPos();
-
+		GetDataHeight();
 		data.clearStack();
     }
 }
@@ -189,7 +192,7 @@ void MainWindow::setConfig() const
 	//! spaceStyle
 	//! tabSize
 	//! tabStyle
-	QFile file("config");
+	QFile file(qApp->applicationDirPath()+QString("/MiniWordConfig"));
 	if (!file.open(QFile::WriteOnly | QFile::Text)){
 		//qDebug() << "Mainwindow::setConfig::can not open file";
 		return;
@@ -212,7 +215,7 @@ void MainWindow::getConfig()
 	//! spaceStyle
 	//! tabSize
 	//! tabStyle
-	QFile file("config");
+	QFile file(qApp->applicationDirPath()+QString("/MiniWordConfig"));
 	if (!file.open(QFile::ReadOnly | QFile::Text)){
 		//qDebug() << "Mainwindow::getConfig::can not open file";
 
@@ -232,19 +235,17 @@ void MainWindow::getConfig()
 	settingsDlg->setMaxUndoTime(n);
 	in >> n;
 	settingsDlg->setFontSize(n);
+	FontSizeW = (n + 1) * 4;
+	FontSizeH = FontSizeW * 2;
 	in >> n;
 	settingsDlg->setSpaceStyle(n);
 	SpaceStyle = n;
 	in >> n;
 	settingsDlg->setTabSize(n);
-	if (n <= 0) n = 4;
 	TabWidth = n;
 	in >> n;
 	settingsDlg->setTabStyle(n);
 	TabStyle = n;
-
-	FontSizeW = 8;
-	FontSizeH = 16;
 
 	file.close();
 }
@@ -261,10 +262,11 @@ bool MainWindow::openFile(const QString &path)
 	data.clear();
 	data.read(path);
 
+	data.clearStack();
 	QApplication::restoreOverrideCursor();
 	PosLeftUp.DataPos = PosCur.DataPos = PosPre.DataPos = data.begin();
 	DataTextTop = 0;
-	RefreshShowPos();
+	GetDataHeight();
     curFile = QFileInfo(path).canonicalFilePath();
     setWindowTitle(curFile + tr(" - MiniWord"));
 	isUntitled = false;
@@ -298,7 +300,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 		if(PosCur.DataPos==PosPre.DataPos)
 		{
-			PosCur.DataPos=data.add(PosCur.DataPos,tr("\t"));
+			PosCur.DataPos = data.add(PosCur.DataPos,tr("\t"));
 			PosPre = PosCur;
 		}else
 		{
@@ -312,8 +314,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 				PosPre = PosCur;
 			}
 		}
-		RefreshShowPos();
-		IsNeededFindCursor = true;
+		GetDataHeight();
+		FindCursor();
 		break;
     case Qt::Key_Backspace :
 		if(PosCur.DataPos==PosPre.DataPos)
@@ -329,33 +331,23 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 					LocateLeftUpCursor(DataTextTop-1);
 				}
 			}
-			//bool LeftUpFlag = false;
-			//if(PosCur.DataPos == (PosLeftUp.DataPos + 1))
-			//{
-			//	LeftUpFlag = true;
-			//}
 			PosCur.DataPos=data.del(PosCur.DataPos,PosPre.DataPos,false);
 			PosPre=PosCur;
-			//if(LeftUpFlag)
-			//{
-			//	LocateLeftUpCursor(DataTextTop,1);
-			//}
 		}else{
 			if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 			{
-				data.del(PosCur.DataPos,PosPre.DataPos);
+				PosCur.DataPos = data.del(PosCur.DataPos,PosPre.DataPos);
 				PosPre = PosCur;
 			}else
 			{
-				data.del(PosPre.DataPos,PosCur.DataPos);
-				PosCur = PosPre;
+				PosCur.DataPos = data.del(PosPre.DataPos,PosCur.DataPos);
+				PosPre = PosCur;
 			}
 			if(PosCur.ShowPosY<0||PosPre.ShowPosY<0||PosCur.DataPos==PosLeftUp.DataPos||PosPre.DataPos==PosLeftUp.DataPos)
 				PosLeftUp.DataPos = data.begin();
 		}
-		RefreshShowPos();
-		IsNeededFindCursor = true;
-
+		GetDataHeight();
+		FindCursor();
         break;
     case Qt::Key_Enter :
     case Qt::Key_Return :
@@ -377,9 +369,9 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 				PosCur.DataPos = data.edit(PosCur.DataPos,PosPre.DataPos,tr("\n"));
 				PosPre = PosCur;
 			}
-			RefreshShowPos();
 		}
-		IsNeededFindCursor = true;
+		GetDataHeight();
+		FindCursor();
         break;
     case Qt::Key_Delete :
 		if(PosCur.DataPos==PosPre.DataPos)
@@ -388,24 +380,23 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 			{
 				FindCursor();
 			}
-			PosCur.DataPos=data.del(PosCur.DataPos,PosPre.DataPos,true);
+			PosCur.DataPos = data.del(PosCur.DataPos,PosPre.DataPos,true);
 			PosPre = PosCur;
 		}else
 		{
 			if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 			{
-				data.del(PosCur.DataPos,PosPre.DataPos);
+				PosCur.DataPos = data.del(PosCur.DataPos,PosPre.DataPos);
 				PosPre = PosCur;
 			}else
 			{
-				data.del(PosPre.DataPos,PosCur.DataPos);
-				PosCur = PosPre;
+				PosCur.DataPos = data.del(PosPre.DataPos,PosCur.DataPos);
+				PosPre = PosCur;
 			}
 			if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 		}
-		RefreshShowPos();
-		IsNeededFindCursor = true;
-
+		GetDataHeight();
+		FindCursor();
         break;
 	case Qt::Key_Up :
 		if(PosCur.ShowPosY>0)
@@ -468,14 +459,14 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		}
 		{
 			int x = PosCur.ShowPosX;
-			RefreshShowPos();
+			GetDataHeight();
 			if(x!=0&&x<PosCur.ShowPosX)
 			{
 				PosCur.ShowPosX = 0;
 				PosCur.ShowPosY++;
 			}
 		}
-		IsNeededFindCursor = true;
+		FindCursor();
 		ProtectedUpdate();
         break;
 	case Qt::Key_Right :
@@ -501,8 +492,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 				PosCur = PosPre;
 			}
 		}
-		RefreshShowPos();
-		IsNeededFindCursor = true;
+		GetDataHeight();
+		FindCursor();
 		ProtectedUpdate();
         break;
 	case Qt::Key_PageUp:
@@ -523,6 +514,7 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		ProtectedUpdate();
         break;
     default :
+		if(QApplication::keyboardModifiers () == Qt::ControlModifier)return;
 		if(ev->text()=="")return;
 		if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 		if(PosCur.DataPos==PosPre.DataPos)
@@ -541,8 +533,8 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 				PosPre = PosCur;
 			}
 		}
-		RefreshShowPos();
-		IsNeededFindCursor = true;
+		GetDataHeight();
+		FindCursor();
 		break;
     }
 }
@@ -550,6 +542,7 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 {
 	CursorTimer=1;
 	MyCursorTimer.start(700);
+	if(QApplication::keyboardModifiers () == Qt::ControlModifier)return;
 	if(ev->commitString()=="")return;
 	if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 	if(PosCur.DataPos==PosPre.DataPos)
@@ -568,8 +561,8 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 			PosPre = PosCur;
 		}
 	}
-	RefreshShowPos();
-	IsNeededFindCursor = true;
+	GetDataHeight();
+	FindCursor();
 }
 void MainWindow::mousePressEvent(QMouseEvent * ev)
 {
@@ -617,7 +610,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev)
 	if(ev->button() == Qt::LeftButton)
 	{
 		PosPre.DataPos = PosCur.DataPos--;
-		RefreshShowPos();
+		GetDataHeight();
 		ProtectedUpdate();
 	}
 	IsDragged = false;
@@ -660,6 +653,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 			if(FontSizeW<40)
 			{
 				ChangeFontSize(FontSizeW+4);
+				settingsDlg->setFontSize(FontSizeW/4 - 1);
 			}
 		}else
 		{
@@ -671,6 +665,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 			if(FontSizeW>8)
 			{
 				ChangeFontSize(FontSizeW-4);
+				settingsDlg->setFontSize(FontSizeW/4 - 1);
 			}
 		}else
 		{
@@ -705,7 +700,6 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 		GetDataHeight();
 		if(TopPre>=DataTextHeight)TopPre = DataTextHeight-1;
 		LocateLeftUpCursor(TopPre,1);
-		RefreshShowPos();
 		CursorTimer = 1;
 	}
 
@@ -791,12 +785,12 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 				DrawX=0;
 				DrawY++;
 			}
-		}else if((*i).unicode()>=0x4e00&&(*i).unicode()<=0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(DrawX+FontSizeW*2<TextBoxWidth)
 			{
 				MyPainter.drawText(QRect(FirstQCharX+DrawX,FirstQCharY+DrawY*FontSizeH,2*FontSizeW,FontSizeH),
-								   Qt::AlignCenter,QString("%1").arg(*i));
+								Qt::AlignCenter,QString("%1").arg(*i));
 				DrawX+=FontSizeW*2;
 				i++;
 			}else
@@ -853,10 +847,12 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 				MyPainter.setPen(Qt::black);
 			else MyPainter.setPen(QColor(150,150,150));
 		}
-		MyPainter.drawText(QRect(FirstQCharX-20,FirstQCharY+(line-1)*FontSizeH,20,FontSizeH),
+		MyPainter.drawText(QRect(0,FirstQCharY+(line-1)*FontSizeH,FirstQCharX,FontSizeH),
 						   Qt::AlignCenter,QString("%1").arg(line + DataTextTop));
 	}
-
+	MyPainter.setPen(QColor(150,150,150));
+	MyPainter.drawText(FirstQCharX+TextBoxWidth-100,FirstQCharY-8,
+						QString("line:%1 colume:%2").arg(PosCur.ShowPosY+DataTextTop+1).arg(PosCur.ShowPosX/FontSizeW));
 	MyScrollBar->move(FirstQCharX+TextBoxWidth+5,FirstQCharY);
 	MyScrollBar->setFixedSize(15,newHeigh);
 	MyScrollBar->setRange(0,DataTextHeight-1);
@@ -882,8 +878,6 @@ void MainWindow::on_action_Open_triggered()
         }
 		connect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(GetDataHeight()));
     }
-
-	data.clearStack();
 }
 void MainWindow::on_action_Save_triggered()
 {
@@ -902,36 +896,40 @@ void MainWindow::on_action_Exit_triggered()
 }
 void MainWindow::on_action_Undo_triggered()
 {
+	CursorTimer=1;
+	MyCursorTimer.start(700);
+	if(ProtectedUpdateTimer == 0)return;
 	PosPre.DataPos = PosCur.DataPos = data.undo(PosCur.DataPos);
 	PosLeftUp.DataPos = data.begin();
-	RefreshShowPos();
-	IsNeededFindCursor = true;
-	ProtectedUpdate();
+	PosCur.ShowPosY = PosPre.ShowPosY = -1;
+	GetDataHeight();
+	FindCursor();
 }
 void MainWindow::on_action_Cut_triggered()
 {
     //todo
 	CursorTimer=1;
 	MyCursorTimer.start(700);
-	IsNeededFindCursor = true;
 	if(ProtectedUpdateTimer == 0)return;
 	if(PosCur.DataPos == PosPre.DataPos)return;
 	if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
-	if(PosCur.DataPos == PosPre.DataPos)return;
 	if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 	{
-		data.cut(PosCur.DataPos,PosPre.DataPos);
+		PosCur.DataPos = data.cut(PosCur.DataPos,PosPre.DataPos);
 		PosPre = PosCur;
 	}else
 	{
-		data.cut(PosPre.DataPos,PosCur.DataPos);
-		PosCur = PosPre;
+		PosCur.DataPos = data.cut(PosPre.DataPos,PosCur.DataPos);
+		PosPre = PosCur;
 	}
-	RefreshShowPos();
+	GetDataHeight();
+	FindCursor();
 }
 void MainWindow::on_action_Copy_triggered()
 {
-	IsNeededFindCursor = true;
+	FindCursor();
+	if(ProtectedUpdateTimer == 0)return;
+	ProtectedUpdate();
 	if(PosCur.DataPos == PosPre.DataPos)return;
 	if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 	{
@@ -946,17 +944,30 @@ void MainWindow::on_action_Paste_triggered()
     //todo
 	CursorTimer = 1;
 	MyCursorTimer.start(700);
+	if(ProtectedUpdateTimer == 0)return;
 	if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 	if(PosCur.DataPos==PosPre.DataPos)
 	{
-		PosCur.DataPos=data.paste(PosCur.DataPos);
+		PosCur.DataPos=data.paste(PosCur.DataPos,PosPre.DataPos);
 		PosPre = PosCur;
+	}else{
+		if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
+		{
+			PosCur.DataPos = data.paste(PosCur.DataPos,PosPre.DataPos);
+			PosPre = PosCur;
+		}else
+		{
+			PosCur.DataPos = data.paste(PosPre.DataPos,PosCur.DataPos);
+			PosPre = PosCur;
+		}
 	}
-	RefreshShowPos();
-	IsNeededFindCursor = true;
+	GetDataHeight();
+	FindCursor();
 }
 void MainWindow::on_action_Delete_triggered()
 {
+	CursorTimer=1;
+	MyCursorTimer.start(700);
 	if(ProtectedUpdateTimer == 0)return;
 	if(PosCur.DataPos==PosPre.DataPos)
 	{
@@ -964,30 +975,23 @@ void MainWindow::on_action_Delete_triggered()
 		{
 			FindCursor();
 		}
-		PosCur.DataPos++;
-		if(!PosCur.DataPos.isOverFlow())
-		{
-			data.del(PosPre.DataPos,PosCur.DataPos);
-		}
-		PosCur = PosPre;
+		PosCur.DataPos=data.del(PosCur.DataPos,PosPre.DataPos,true);
+		PosPre = PosCur;
 	}else
 	{
 		if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 		{
-			data.del(PosCur.DataPos,PosPre.DataPos);
+			PosCur.DataPos = data.del(PosCur.DataPos,PosPre.DataPos);
 			PosPre = PosCur;
 		}else
 		{
-			data.del(PosPre.DataPos,PosCur.DataPos);
-			PosCur = PosPre;
+			PosCur.DataPos = data.del(PosPre.DataPos,PosCur.DataPos);
+			PosPre = PosCur;
 		}
 		if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 	}
-	RefreshShowPos();
-	IsNeededFindCursor = true;
-
-	CursorTimer=1;
-	MyCursorTimer.start(700);
+	GetDataHeight();
+	FindCursor();
 }
 void MainWindow::on_action_Find_triggered()
 {
@@ -995,36 +999,87 @@ void MainWindow::on_action_Find_triggered()
 }
 void MainWindow::on_action_FindNext_triggered()
 {
+	if(ProtectedUpdateTimer == 0)return;
+	if(replaceDlg->findLeText() == "")return;
 	if(PosCur.DataPos == PosPre.DataPos)
 	{
-		PosCur.DataPos = data.find(PosCur.DataPos, replaceDlg->findLeText());
-		PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+		auto i = data.find(PosCur.DataPos, replaceDlg->findLeText());
+		if(i)
+		{
+			PosCur.DataPos = i;
+			PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+		}else
+		{
+			i = data.find(data.begin(), replaceDlg->findLeText());
+			if(i){
+				PosCur.DataPos = i;
+				PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+			}else
+			{
+				QMessageBox::information(this,"MiniWord","无法找到此字符串");
+			}
+		}
 	}else
 	{
-		PosCur.DataPos = data.find(PosCur.DataPos + 1, replaceDlg->findLeText());
-		PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+		auto i = data.find(PosCur.DataPos + 1, replaceDlg->findLeText());
+		if(i)
+		{
+			PosCur.DataPos = i;
+			PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+		}else
+		{
+			i = data.find(data.begin(), replaceDlg->findLeText());
+			if(i){
+				PosCur.DataPos = i;
+				PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
+			}else
+			{
+				QMessageBox::information(this,"MiniWord","无法找到此字符串");
+			}
+		}
 	}
-	RefreshShowPos();
-	IsNeededFindCursor = 1;
+	GetDataHeight();
+	FindCursor();
 	ProtectedUpdate();
 }
 void MainWindow::on_action_Replace_triggered()
 {
 	replaceDlg->show();
 }
+void MainWindow::data_replace()
+{
+	if(ProtectedUpdateTimer == 0)return;
+	if(replaceDlg->findLeText() == "")return;
+}
 
+void MainWindow::data_replace_all()
+{
+	if(ProtectedUpdateTimer == 0)return;
+	if(replaceDlg->findLeText() == "")return;
+	int len = replaceDlg->findLeText().length();
+	auto i = data.begin();
+	while(i = data.find(i,replaceDlg->findLeText()))
+	{
+		i = data.edit(i,(i+len),replaceDlg->replaceLeText());
+		i++;
+	}
+	PosLeftUp.DataPos = PosPre.DataPos = PosCur.DataPos = data.begin();
+	GetDataHeight();
+}
 void MainWindow::on_action_SelectAll_triggered()
 {
+	if(ProtectedUpdateTimer == 0)return;
 	PosLeftUp.DataPos = PosCur.DataPos = data.begin();
 	PosPre.DataPos = data.end();
 	DataTextTop = 0;
-	RefreshShowPos();
+	GetDataHeight();
 	ProtectedUpdate();
 }
 void MainWindow::getMenu_E_state()
 {
     //active all action
     ui->action_Undo->setDisabled(false);
+	ui->action_Redo->setDisabled(false);
     ui->action_Cut->setDisabled(false);
     ui->action_Copy->setDisabled(false);
     ui->action_Paste->setDisabled(false);
@@ -1045,6 +1100,15 @@ void MainWindow::getMenu_E_state()
 	{
         ui->action_FindNext->setDisabled(true);
 	}
+	if (data.undoStackEmpty())
+	{
+		ui->action_Undo->setDisabled(true);
+	}
+	if (data.redoStackEmpty())
+	{
+		ui->action_Redo->setDisabled(true);
+	}
+	ui->action_SelectAll->setDisabled(false);
 }
 
 void MainWindow::getDataChanged()
@@ -1054,80 +1118,6 @@ void MainWindow::getDataChanged()
 	setWindowTitle(curFile + '*' + " - MiniWord");
 }
 
-
-void MainWindow::RefreshShowPos()
-{
-	PosCur.DataPos.clear();
-	PosPre.DataPos.clear();
-
-	auto i = PosLeftUp.DataPos;
-	bool PosCurFlag=false,PosPreFlag=false;
-	int MoveX=0;
-	int MoveY=0;
-
-	i.clear();
-	while((!i.isOverFlow()) && MoveY < TextBoxHeight)
-	{
-		if(!PosCurFlag&&i==PosCur.DataPos)
-		{
-			PosCur.ShowPosX = MoveX;
-			PosCur.ShowPosY = MoveY;
-			PosCurFlag=true;
-		}
-		if(!PosPreFlag&&i==PosPre.DataPos)
-		{
-			PosPre.ShowPosX = MoveX;
-			PosPre.ShowPosY = MoveY;
-			PosPreFlag=true;
-		}
-		if(PosCurFlag&&PosPreFlag)break;
-
-		if((*i)=='\n')
-		{
-			MoveY++;
-			MoveX = 0;
-			i++;
-		}else if((*i)=='\t')
-		{
-			if(MoveX==TextBoxWidth)
-			{
-				MoveX=0;
-				MoveY++;
-			}else if((1+MoveX/(FontSizeW*TabWidth))*FontSizeW*TabWidth<TextBoxWidth)
-			{
-				MoveX=(1+MoveX/(FontSizeW*TabWidth))*FontSizeW*TabWidth;
-				i++;
-			}else
-			{
-				MoveX=TextBoxWidth;
-				i++;
-			}
-		}else if((*i).unicode() >= 0x4e00&&(*i).unicode() <= 0x9fa5)
-		{
-			if(MoveX+FontSizeW*2<TextBoxWidth)
-			{
-				MoveX+=FontSizeW*2;
-				i++;
-			}else
-			{
-				MoveY++;
-				MoveX=0;
-			}
-		}else
-		{
-			if(MoveX+FontSizeW<TextBoxWidth)
-			{
-				MoveX+=FontSizeW;
-				i++;
-			}else
-			{
-				MoveY++;
-				MoveX=0;
-			}
-		}
-	}
-	//qDebug("%d",PosCur.ShowPosY);
-}
 void MainWindow::LocateCursor(int x,int y)
 {
 	int MoveX = 0;
@@ -1159,7 +1149,7 @@ void MainWindow::LocateCursor(int x,int y)
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode()>=0x4e00&&(*i).unicode()<=0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1207,7 +1197,7 @@ void MainWindow::LocateCursor(int x,int y)
 				MoveX=(1+MoveX/(FontSizeW*TabWidth))*FontSizeW*TabWidth;
 				i++;
 			}
-		}else if((*i).unicode()>=0x4e00&&(*i).unicode()<=0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(MoveX+FontSizeW*2 < x)
 			{
@@ -1297,7 +1287,7 @@ void MainWindow:: LocateLeftUpCursor(int newDataTextTop,int flag)
 				MoveY++;
 				PosLeftUp.DataPos = i;
 			}
-		}else if((*i).unicode() >= 0x4e00&&(*i).unicode() <= 0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1366,7 +1356,7 @@ void MainWindow::FillBlueArea(Pos&pos1,Pos&pos2,QPainter*painter)
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode() >= 0x4e00&&(*i).unicode() <= 0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1440,7 +1430,7 @@ void MainWindow::GetDataHeight()
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode() >= 0x4e00&&(*i).unicode() <= 0x9fa5)
+		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1467,31 +1457,10 @@ void MainWindow::GetDataHeight()
 	DataTextHeight = MoveY;
 	PosCurY -= DataTextTop;
 	PosPreY -= DataTextTop;
-	if(PosCurY<0||PosCurY>=TextBoxHeight||(PosCur.ShowPosX==0))
-	{
-		PosCur.ShowPosX=PosCurX;
-		PosCur.ShowPosY=PosCurY;
-	}
-	if(PosPreY<0||PosPreY>=TextBoxHeight||(PosPre.ShowPosX==0))
-	{
-		PosPre.ShowPosX=PosPreX;
-		PosPre.ShowPosY=PosPreY;
-	}
-	if(IsNeededFindCursor == true)
-	{
-		FindCursor();
-		IsNeededFindCursor = false;
-	}
-	//qDebug("%d %d %d",DataTextTop,PosCur.ShowPosY,PosCurY);
-	ProtectedUpdateTimer = 1;
-	int newScrollPos = MyScrollBar->sliderPosition();
-	if(newScrollPos != oldScrollPos)
-	{
-		LocateLeftUpCursor(MyScrollBar->sliderPosition());
-		RefreshShowPos();
-		ProtectedUpdate();
-	}
-	oldScrollPos = newScrollPos;
+	PosCur.ShowPosX=PosCurX;
+	PosCur.ShowPosY=PosCurY;
+	PosPre.ShowPosX=PosPreX;
+	PosPre.ShowPosY=PosPreY;
 }
 
 void MainWindow::FindCursor()
@@ -1531,7 +1500,6 @@ void MainWindow::ChangeFontSize(int Size)
 	GetDataHeight();
 	if(TopPre >= DataTextHeight)TopPre = DataTextHeight - 1;
 	LocateLeftUpCursor(TopPre,1);
-	RefreshShowPos();
 	MyScrollBar->setSliderPosition(TopPre);
 }
 
@@ -1540,16 +1508,31 @@ void MainWindow::ProtectedUpdate()
 	if(ProtectedUpdateTimer == 1)
 	{
 		ProtectedUpdateTimer = 0;
-		QTimer::singleShot(31,this,SLOT(update()));
+		QTimer::singleShot(0,this,SLOT(update()));
 	}
+}
+
+void MainWindow::RefreshProtectTimer()
+{
+	ProtectedUpdateTimer = 1;
+	int newScrollPos = MyScrollBar->sliderPosition();
+	if(newScrollPos != oldScrollPos)
+	{
+		LocateLeftUpCursor(MyScrollBar->sliderPosition());
+		ProtectedUpdate();
+	}
+	oldScrollPos = newScrollPos;
 }
 void MainWindow::on_action_Redo_triggered()
 {
+	CursorTimer=1;
+	MyCursorTimer.start(700);
+	if(ProtectedUpdateTimer == 0)return;
 	PosPre.DataPos = PosCur.DataPos = data.redo(PosCur.DataPos);
 	PosLeftUp.DataPos = data.begin();
-	RefreshShowPos();
-	IsNeededFindCursor = true;
-	ProtectedUpdate();
+	PosCur.ShowPosY = PosPre.ShowPosY = -1;
+	GetDataHeight();
+	FindCursor();
 }
 
 void MainWindow::on_action_Setting_triggered()
@@ -1560,6 +1543,7 @@ void MainWindow::on_action_Setting_triggered()
 		SpaceStyle = settingsDlg->spaceStyle();
 		TabWidth = settingsDlg->tabSize();
 		TabStyle = settingsDlg->tabStyle();
+		ChangeFontSize((settingsDlg->defaultFontSize() + 1) * 4);
+		ProtectedUpdate();
 	}
 }
-

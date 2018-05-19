@@ -8,7 +8,6 @@ SettingDlg::SettingDlg(QWidget *parent) :
 	ui->setupUi(this);
 
 	setWindowTitle(tr("设置"));
-	ui->defaultFontSizeSb->setRange(1, 9);
 }
 
 SettingDlg::~SettingDlg()
@@ -56,7 +55,6 @@ void SettingDlg::setTabSize(int n)
 
 int SettingDlg::maxUndoTime() const
 {
-	if (ui->maxUndoTimeSb->value() <= 0) ui->maxUndoTimeSb->setValue(20);
 	return ui->maxUndoTimeSb->value();
 }
 
@@ -67,7 +65,6 @@ int SettingDlg::defaultFontSize() const
 
 int SettingDlg::tabSize() const
 {
-	if (ui->tabSizeSb->value() < 2 || ui->tabSizeSb->value() > 16) ui->tabSizeSb->setValue(4);
 	return ui->tabSizeSb->value();
 }
 

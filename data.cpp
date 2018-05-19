@@ -422,8 +422,37 @@ Data::iterator Data::edit(const Data::iterator & startLocate, const Data::iterat
 Data::iterator Data::find(const Data::iterator & startLocate, const QString & str)
 {
 	//if can't find return startLocate and give QMessageBox::warning
-	//todo
-	return startLocate;
+	int len = str.length();
+	int*next = new int[len];
+	int j=0,k=-1;
+	next[0] = 0;
+	while(j<len)
+		if((k==-1)||(str[j]==str[k])){
+			j++;
+			k++;
+			next[j]=k+1;
+		}
+		else k=next[k]-1;
+	for(int i = 1;i<len;i++){
+		if(str[i] == str[next[i]])next[i] = next[next[i]];
+	}
+	auto PosData = startLocate;
+	int PosStr = 0;
+	while(PosData&&PosStr!=len){
+		if((*PosData) == str[PosStr]){
+			PosData++;
+			PosStr++;
+		}else if(next[PosStr] != 0){
+			PosStr = next[PosStr] - 1;
+		}else{
+			PosData++;
+			PosStr = 0;
+		}
+	}
+	delete[] next;
+	if(PosData)return (PosData - str.length());
+
+	return iterator();
 }
 
 Data::iterator Data::cut(const Data::iterator & startLocate, const Data::iterator & endLocate)
@@ -452,11 +481,6 @@ Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterat
 	return begin();
 }
 
-Data::iterator Data::paste(const Data::iterator &locate)
-{
-	return add(locate, QApplication::clipboard()->text());
-}
-
 Data::iterator Data::paste(const Data::iterator & startLocate, const Data::iterator &endLocate)
 {
 	if (startLocate == endLocate)
@@ -464,7 +488,6 @@ Data::iterator Data::paste(const Data::iterator & startLocate, const Data::itera
 	else
 		return edit(startLocate, endLocate, QApplication::clipboard()->text());
 }
-
 Data::iterator Data::undo(const iterator &now)
 {
 	if (undoStack.length()){

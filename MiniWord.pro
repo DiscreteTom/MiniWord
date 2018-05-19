@@ -30,8 +30,8 @@ SOURCES += main.cpp\
     settingdlg.cpp
 
 HEADERS  += mainwindow.h \
-    replacedlg.h \
     data.h \
+    replacedlg.h \
     settingdlg.h
 
 FORMS    += mainwindow.ui \
@@ -40,3 +40,7 @@ FORMS    += mainwindow.ui \
 
 DISTFILES += \
     README.md
+
+RESOURCES += \
+    miniword_icon.qrc
+RC_FILE=icon.rc

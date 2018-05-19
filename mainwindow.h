@@ -54,6 +54,9 @@ private slots:
 	void on_action_SelectAll_triggered();
 	void on_action_Setting_triggered();
 
+	void data_replace();
+	void data_replace_all();
+
     //============== about menu ==============
     void getMenu_E_state();
 
@@ -61,7 +64,7 @@ private slots:
 
 	void getDataChanged();
 	void ProtectedUpdate();					//保护式刷新
-	void GetDataHeight();					//获取文本高度并更新与显示相关的信息
+	void RefreshProtectTimer();				//更新保护式刷新计时器
 
 
 private:
@@ -105,7 +108,6 @@ private:
 	int TabWidth;							//Tab宽度
 	int TabStyle;							//Tab样式
 
-	bool IsNeededFindCursor;				//判断是否需要定位光标位置
 	bool IsDragged;							//判断是否正在拖动鼠标
 
 	int CursorTimer;						//光标闪烁计时器
@@ -116,13 +118,13 @@ private:
 
 	QScrollBar *MyScrollBar;				//混动条
 	int oldScrollPos;
-	void RefreshShowPos();					//刷新光标显示位置
 	void LocateCursor(int x,int y);			//光标定位
 	void FillBlueArea(Pos &pos1, Pos &pos2, QPainter*painter);
 	void Rolling(int flag);					//页面滚动,flag表示向上滚还是向下滚
 	void LocateLeftUpCursor(int newDataTextTop,int flag = 0);
 											//左上角光标定位,flag表示是否需要绝对定位
 	void FindCursor();						//将光标定位于视野中
+	void GetDataHeight();					//获取文本高度并刷新光标显示位置
 
 	void ChangeFontSize(int Size);			//改变字体大小
 
