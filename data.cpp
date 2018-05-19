@@ -452,9 +452,17 @@ Data::iterator Data::copy(const Data::iterator & startLocate, const Data::iterat
 	return begin();
 }
 
-Data::iterator Data::paste(const Data::iterator & locate)
+Data::iterator Data::paste(const Data::iterator &locate)
 {
-	return add(locate,QApplication::clipboard()->text());
+	return add(locate, QApplication::clipboard()->text());
+}
+
+Data::iterator Data::paste(const Data::iterator & startLocate, const Data::iterator &endLocate)
+{
+	if (startLocate == endLocate)
+		return add(startLocate,QApplication::clipboard()->text());
+	else
+		return edit(startLocate, endLocate, QApplication::clipboard()->text());
 }
 
 Data::iterator Data::undo(const iterator &now)

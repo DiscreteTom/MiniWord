@@ -174,7 +174,8 @@ public:
 	iterator find(const iterator & startLocate, const QString & str);
 	iterator cut(const iterator & startLocate, const iterator & endLocate);
 	iterator copy(const iterator & startLocate, const iterator & endLocate);
-	iterator paste(const iterator & locate);//get string from system clipboard
+	iterator paste(const iterator & locate);
+	iterator paste(const iterator & startLocate, const iterator & endLocate);//get string from system clipboard
 	iterator undo(const iterator & now);
 	iterator redo(const iterator & now);
 	void clear();
