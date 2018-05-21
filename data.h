@@ -170,8 +170,8 @@ public:
 	iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
 
 	//========== about text edit ========
-	iterator add(const iterator & locate, const QString & str, ActionStack::UndoType undo = 0);
-	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, ActionStack::UndoType undo = 0);
+	iterator add(const iterator & locate, const QString & str, ActionStack::UndoType undo = ActionStack::UndoType::NORMAL);
+	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, ActionStack::UndoType undo = ActionStack::UndoType::NORMAL);
 	iterator edit(const iterator & startLocate, const iterator & endLocate, const QString & str);
 	iterator find(const iterator & startLocate, const QString & str);
 	iterator cut(const iterator & startLocate, const iterator & endLocate);

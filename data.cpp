@@ -521,11 +521,11 @@ Data::iterator Data::undo(const iterator &now)
 		if (a.m_type == Action::ADD){
 			//need del
 			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
-			iterator result = del(startLocate, startLocate + a.m_str.length(), false, 1);
+			iterator result = del(startLocate, startLocate + a.m_str.length(), false, ActionStack::UndoType::UNDO);
 			return result;
 		} else if (a.m_type == Action::DEL){
 			//need add
-			iterator result = add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, 1);
+			iterator result = add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::UNDO);
 			return result;
 		}
 	} else {//undo stack is empty
@@ -541,11 +541,11 @@ Data::iterator Data::redo(const Data::iterator &now)
 		if (a.m_type == Action::DEL){
 			//need del
 			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
-			iterator result = del(startLocate, startLocate + a.m_str.length(), false, -1);
+			iterator result = del(startLocate, startLocate + a.m_str.length(), false, ActionStack::UndoType::REDO);
 			return result;
 		} else if (a.m_type == Action::ADD){
 			//need add
-			return add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, -1);
+			return add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::REDO);
 		}
 	} else {//redo stack is empty
 		return now;
