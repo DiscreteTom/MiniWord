@@ -42,5 +42,6 @@ DISTFILES += \
     README.md
 
 RESOURCES += \
+    miniword_icon.qrc \
     miniword_icon.qrc
 RC_FILE=icon.rc

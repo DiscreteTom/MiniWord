@@ -281,7 +281,7 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str, Act
 		if (undo == ActionStack::UndoType::NORMAL) redoStack.clear();
 	}
 
-	iterator result;
+	iterator result = locate;
 
 	if (str.length() == 1){
 		//! single char
@@ -299,6 +299,8 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str, Act
 		for (int i = 0; i < strList.length(); ++i){
 			if (strList[i].length()){
 				result = currentHeap->add(strList[i], currentIndex);
+			} else {
+				result = iterator(currentNode, currentHeap, currentIndex);
 			}
 			if (i != strList.length() - 1){//add \n
 				result.parentHeap()->moveToNewNode(result.index());
