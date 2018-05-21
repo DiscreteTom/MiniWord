@@ -37,7 +37,7 @@ private:
 		void moveToNextHeap(int start);//move chars from start of the heap to the next heap, include start
 		void moveToNewNode(int start);//include start
 		void move(int start, int offset);//offset must be positive, move right, include start
-		iterator add(const QString & str, int index = -1);//if index == -1 then add to the tail, str CAN NOT include \n
+		iterator add(const QString & str, int index);//if index == -1 then add to the tail, str CAN NOT include \n
 		iterator begin();
 		void del(int index);
 
@@ -85,6 +85,8 @@ private:
 	public:
 		ActionStack(int depth = 20);
 
+		enum UndoType {NORMAL, UNDO, REDO};
+
 		//----- about stack ------
 		void push(Action action);
 		Action pop();
@@ -107,7 +109,7 @@ private:
 	void delNode(Node * nodep);
 	void delHeap(Heap * heapp);
 	void mergeNextNode(Node * nodep);
-	bool mergeNextHeap(Heap * heapp);
+	void mergeNextHeap(Heap * heapp);
 
 	//======= private operator overload ========
 	Node & operator[](int n);
@@ -168,8 +170,8 @@ public:
 	iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
 
 	//========== about text edit ========
-	iterator add(const iterator & locate, const QString & str, int undo = 0);
-	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, int undo = 0);
+	iterator add(const iterator & locate, const QString & str, ActionStack::UndoType undo = 0);
+	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, ActionStack::UndoType undo = 0);
 	iterator edit(const iterator & startLocate, const iterator & endLocate, const QString & str);
 	iterator find(const iterator & startLocate, const QString & str);
 	iterator cut(const iterator & startLocate, const iterator & endLocate);
