@@ -230,10 +230,14 @@ void MainWindow::getConfig()
 
 		settingsDlg->setMaxUndoTime(20);
 		settingsDlg->setFontSize(20);
+		settingsDlg->setFontSize(1);
 		FontSizeW = 8;
 		FontSizeH = 16;
+		settingsDlg->setSpaceStyle(1);
 		SpaceStyle = 0;
+		settingsDlg->setTabSize(8);
 		TabWidth = 8;
+		settingsDlg->setTabStyle(1);
 		TabStyle = 0;
 		return;
 	}
@@ -252,7 +256,7 @@ void MainWindow::getConfig()
 	settingsDlg->setSpaceStyle(n);
 	SpaceStyle = n;
 	in >> n;
-	if(n<2||n>16)n = 4;
+	if(n<2||n>16)n = 8;
 	settingsDlg->setTabSize(n);
 	TabWidth = n;
 	in >> n;
@@ -839,7 +843,7 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 	auto i=PosLeftUp.DataPos;
 	int ParaCounter = DataParaTop+1;
 	i.clear();
-	MyPainter.setFont(QFont("楷体",FontSizeW));
+	MyPainter.setFont(QFont("楷体",FontSizeW*10/6));
 	MyPainter.setPen(Qt::black);
 	if(PosCur.ShowPosY<0&&PosPre.ShowPosY>=0)MyPainter.setPen(Qt::white);
 	if(PosPre.ShowPosY<0&&PosCur.ShowPosY>=0)MyPainter.setPen(Qt::white);
@@ -1721,7 +1725,7 @@ void MainWindow::on_action_Setting_triggered()
 		TabStyle = settingsDlg->tabStyle();
 		ChangeFontSize((settingsDlg->defaultFontSize() + 1) * 4);
 		ProtectedUpdate();
-	}
+	}else getConfig();
 }
 
 void MainWindow::on_action_GetCharNum_triggered()
