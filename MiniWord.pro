@@ -27,12 +27,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     replacedlg.cpp \
     data.cpp \
-    settingdlg.cpp
+    settingdlg.cpp \
+    charnumdlg.cpp
 
 HEADERS  += mainwindow.h \
     data.h \
     replacedlg.h \
-    settingdlg.h
+    settingdlg.h \
+    charnumdlg.h
 
 FORMS    += mainwindow.ui \
     replacedlg.ui \
@@ -42,6 +44,5 @@ DISTFILES += \
     README.md
 
 RESOURCES += \
-    miniword_icon.qrc \
     miniword_icon.qrc
 RC_FILE=icon.rc

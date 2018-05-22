@@ -16,6 +16,7 @@
 #include "replacedlg.h"
 #include "data.h"
 #include "settingdlg.h"
+#include "charnumdlg.h"
 
 namespace Ui {
 class MainWindow;
@@ -37,6 +38,9 @@ private slots:
     void on_action_Open_triggered();
     void on_action_Save_triggered();
     void on_action_SaveAs_triggered();
+	void dragEnterEvent(QDragEnterEvent*ev);
+	void dragMoveEvent(QDragMoveEvent*ev);
+	void dropEvent(QDropEvent*ev);
 
     //=============== about window ================
     void on_action_Exit_triggered();
@@ -67,6 +71,16 @@ private slots:
 	void RefreshProtectTimer();				//更新保护式刷新计时器
 
 
+	void on_action_GetCharNum_triggered();
+
+	void on_action_AddTime_triggered();
+
+	void on_action_toLine_triggered();
+
+	void on_action_toParagraph_triggered();
+
+	void on_action_ShowLine_triggered();
+
 private:
     Ui::MainWindow *ui;
     //=================== Object ===============================
@@ -83,6 +97,7 @@ private:
     //----------- replace and find dialog ----------
     ReplaceDlg * replaceDlg;
 	SettingDlg * settingsDlg;
+	CharNumDlg * charnumDlg;
 
     //=================== Variable ============================
 
@@ -100,6 +115,7 @@ private:
 	Pos PosPre;								//上一时刻光标
 	int DataTextHeight;						//文本高度
 	int DataTextTop;						//文本顶部
+	int DataParaTop;						//文本处于文本框上方的段落数
 	int TextBoxHeight;						//文本框高度
 	int TextBoxWidth;						//文本框顶部
 	int FontSizeW;							//字体宽度
@@ -107,6 +123,7 @@ private:
 	int SpaceStyle;							//空格样式
 	int TabWidth;							//Tab宽度
 	int TabStyle;							//Tab样式
+	int LineShowFlag;						//行号显示策略
 
 	bool IsDragged;							//判断是否正在拖动鼠标
 

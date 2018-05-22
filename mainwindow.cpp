@@ -2,11 +2,15 @@
 #include "ui_mainwindow.h"
 
 #include <QMessageBox>
+#include <QMimeData>
 #include <QFileDialog>
 #include <QFile>
 #include <QPushButton>
+#include <QInputDialog>
 #include <QTextStream>
 #include <QStandardPaths>
+#include <QDateTime>
+#include <QDebug>
 
 const int FirstQCharX = 30;
 const int FirstQCharY = 50;
@@ -31,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	//================== dialog ========
 	replaceDlg = new ReplaceDlg(this);
 	settingsDlg = new SettingDlg(this);
+	charnumDlg = new CharNumDlg(this);
 	getConfig();
 	data.resetStackSize(settingsDlg->maxUndoTime());
 	connect(replaceDlg,SIGNAL(FindNext()),this,SLOT(on_action_FindNext_triggered()));
@@ -42,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	setAttribute(Qt::WA_InputMethodEnabled, true);
 	centralWidget()->setMouseTracking(true);
 	setMouseTracking(true);
+	centralWidget()->setAcceptDrops(true);
+	setAcceptDrops(true);
 
 	//==================== interface ====================
 	MyCursorTimer.start(700);
@@ -59,9 +66,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	DataTextHeight = 0;
 	DataTextTop = 0;
+	DataParaTop = 0;
 	TextBoxHeight = 20;
 	TextBoxWidth = 1000;
 
+	LineShowFlag = 0;
 	IsDragged = false;
 
 	CursorTimer = 0;
@@ -232,8 +241,10 @@ void MainWindow::getConfig()
 
 	int n;
 	in >> n;
+	if(n < 20)n = 20;
 	settingsDlg->setMaxUndoTime(n);
 	in >> n;
+	if(n<1||n>9)n = 1;
 	settingsDlg->setFontSize(n);
 	FontSizeW = (n + 1) * 4;
 	FontSizeH = FontSizeW * 2;
@@ -241,6 +252,7 @@ void MainWindow::getConfig()
 	settingsDlg->setSpaceStyle(n);
 	SpaceStyle = n;
 	in >> n;
+	if(n<2||n>16)n = 4;
 	settingsDlg->setTabSize(n);
 	TabWidth = n;
 	in >> n;
@@ -678,10 +690,12 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 void MainWindow::paintEvent(QPaintEvent *ev)
 {
 	QPainter MyPainter(this);                                           //A Painter
+	MyPainter.setFont(QFont("楷体",8));
+	QFont FontRestore;
 	QPen PenRestore;
-	MyPainter.setFont(QFont("楷体",FontSizeW*10/8));
 
     int DrawX=0,DrawY=0;                                                //the position to draw text
+	int PosCurPara = 1,PosPrePara = 1;
 
 	int newWidth = width() - 65;
 	int newHeigh = height() - 60;
@@ -701,7 +715,7 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 		if(TopPre>=DataTextHeight)TopPre = DataTextHeight-1;
 		LocateLeftUpCursor(TopPre,1);
 		CursorTimer = 1;
-	}
+	}																	//调整宽和高
 
 	MyPainter.fillRect(FirstQCharX,FirstQCharY,TextBoxWidth,newHeigh,Qt::white);
 	if(PosCur.DataPos==PosPre.DataPos)
@@ -710,17 +724,14 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 			MyPainter.drawLine(PosCur.ShowPosX + FirstQCharX,PosCur.ShowPosY * FontSizeH + FirstQCharY,
 								PosCur.ShowPosX + FirstQCharX,PosCur.ShowPosY * FontSizeH + FirstQCharY + FontSizeH);
 	}else{
-		//qDebug("%d %d %d %d\n",PosCur.ShowPosX,PosCur.ShowPosY,PosPre.ShowPosX,PosPre.ShowPosY);
 		if(PosCur.ShowPosY>PosPre.ShowPosY&&PosCur.ShowPosY>=0)
 		{
 			FillBlueArea(PosPre,PosCur,&MyPainter);
 			ChangeColorFlag = 2;
-			if(PosPre.ShowPosY<0)MyPainter.setPen(Qt::white);
 		}else if(PosCur.ShowPosY<PosPre.ShowPosY&&PosPre.ShowPosY>=0)
 		{
 			FillBlueArea(PosCur,PosPre,&MyPainter);
 			ChangeColorFlag = 1;
-			if(PosCur.ShowPosY<0&&PosPre.ShowPosY>=0)MyPainter.setPen(Qt::white);
 		}else if(PosCur.ShowPosX>PosPre.ShowPosX)
 		{
 			if(PosCur.ShowPosY>=0&&PosCur.ShowPosY<TextBoxHeight)
@@ -734,9 +745,118 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 									QColor(0,0,255));
 			ChangeColorFlag = 1;
 		}
-	}
-	Data::iterator i=PosLeftUp.DataPos;
+	}																	//绘制光标
+	MyPainter.setPen(QColor(150,150,150));
+	if(LineShowFlag == 0)
+	{
+		auto i = data.begin().parentNode();
+		int PosCurParaCharNum = 0;
+		if(ChangeColorFlag == 0)
+		{
+			while(i != PosCur.DataPos.parentNode())
+			{
+				i = i->nextNode;
+				PosCurPara++;
+				PosPrePara++;
+			}
+			auto j = i->firstHeap;
+			while(j != PosCur.DataPos.parentHeap())
+			{
+				j = j->nextHeap;
+				PosCurParaCharNum+=j->charNum;
+			}
+			PosCurParaCharNum+=PosCur.DataPos.index();
+		}else if(ChangeColorFlag == 1)
+		{
+			while(i != PosCur.DataPos.parentNode())
+			{
+				i = i->nextNode;
+				PosCurPara++;
+				PosPrePara++;
+			}
+			auto j = i->firstHeap;
+			while(j != PosCur.DataPos.parentHeap())
+			{
+				j = j->nextHeap;
+				PosCurParaCharNum+=j->charNum;
+			}
+			PosCurParaCharNum+=PosCur.DataPos.index();
+			while(i != PosPre.DataPos.parentNode())
+			{
+				i = i->nextNode;
+				PosPrePara++;
+			}
+		}else if(ChangeColorFlag == 2)
+		{
+			while(i != PosPre.DataPos.parentNode())
+			{
+				i = i->nextNode;
+				PosCurPara++;
+				PosPrePara++;
+			}
+			while(i != PosCur.DataPos.parentNode())
+			{
+				i = i->nextNode;
+				PosCurPara++;
+			}
+			auto j = i->firstHeap;
+			while(j != PosCur.DataPos.parentHeap())
+			{
+				j = j->nextHeap;
+				PosCurParaCharNum+=j->charNum;
+			}
+			PosCurParaCharNum+=PosCur.DataPos.index();
+		}
+		MyPainter.drawText(FirstQCharX+TextBoxWidth-100,FirstQCharY-8,
+		QString("line:%1 colume:%2").arg(PosCurPara).arg(PosCurParaCharNum));
+	}else if(LineShowFlag == 1)
+	{
+		for(int line = 1;line <= DataTextHeight - DataTextTop&&line <= TextBoxHeight;line++)
+		{
+			if(ChangeColorFlag == 0){
+				if(line-1==PosCur.ShowPosY)
+					MyPainter.setPen(Qt::black);
+				else MyPainter.setPen(QColor(150,150,150));
+			}else if(ChangeColorFlag == 1)
+			{
+				if(line-1>=PosCur.ShowPosY&&line-1<=PosPre.ShowPosY)
+					MyPainter.setPen(Qt::black);
+				else MyPainter.setPen(QColor(150,150,150));
+			}else if(ChangeColorFlag == 2)
+			{
+				if(line-1>=PosPre.ShowPosY&&line-1<=PosCur.ShowPosY)
+					MyPainter.setPen(Qt::black);
+				else MyPainter.setPen(QColor(150,150,150));
+			}
+			MyPainter.drawText(QRect(0,FirstQCharY+(line-1)*FontSizeH,FirstQCharX,FontSizeH),
+							   Qt::AlignCenter,QString("%1").arg(line + DataTextTop));
+			}
+		MyPainter.setPen(QColor(150,150,150));
+		MyPainter.drawText(FirstQCharX+TextBoxWidth-100,FirstQCharY-8,
+							QString("line:%1 colume:%2").arg(PosCur.ShowPosY+DataTextTop+1).arg(PosCur.ShowPosX/FontSizeW));
+	}																	//绘制额外内容
+
+	auto i=PosLeftUp.DataPos;
+	int ParaCounter = DataParaTop+1;
 	i.clear();
+	MyPainter.setFont(QFont("楷体",FontSizeW));
+	MyPainter.setPen(Qt::black);
+	if(PosCur.ShowPosY<0&&PosPre.ShowPosY>=0)MyPainter.setPen(Qt::white);
+	if(PosPre.ShowPosY<0&&PosCur.ShowPosY>=0)MyPainter.setPen(Qt::white);
+	if(LineShowFlag == 0&&(i == data.begin()||(i-1&&*(i-1)=='\n')))
+	{
+		FontRestore = MyPainter.font();
+		PenRestore = MyPainter.pen();
+		MyPainter.setFont(QFont("楷体",8));
+		if((ParaCounter>=PosCurPara&&ParaCounter<=PosPrePara)||(ParaCounter<=PosCurPara&&ParaCounter>=PosPrePara))
+			MyPainter.setPen(Qt::black);
+		else MyPainter.setPen(QColor(150,150,150));
+		MyPainter.drawText(QRect(0,FirstQCharY,FirstQCharX,FontSizeH),
+						   Qt::AlignCenter,QString("%1").arg(ParaCounter));
+		MyPainter.setFont(FontRestore);
+		MyPainter.setPen(PenRestore);
+	}
+	ParaCounter++;
 	while((!i.isOverFlow())&&(DrawY<TextBoxHeight))
 	{
 		if(ChangeColorFlag==1)
@@ -825,34 +945,22 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 				DrawX=0;
 			}
 		}
-	}
-
-	MyPainter.setFont(QFont("楷体",8));
-	MyPainter.setPen(QColor(150,150,150));
-	for(int line = 1;line <= DataTextHeight - DataTextTop&&line <= TextBoxHeight;line++)
-	{
-		if(ChangeColorFlag==1)
+		if(LineShowFlag == 0 &&i-1&&*(i-1) == '\n'&&DrawY<TextBoxHeight)
 		{
-			if(line-1>=PosCur.ShowPosY&&line-1<=PosPre.ShowPosY)
+			FontRestore = MyPainter.font();
+			PenRestore = MyPainter.pen();
+			MyPainter.setFont(QFont("楷体",8));
+			if((ParaCounter>=PosCurPara&&ParaCounter<=PosPrePara)||(ParaCounter<=PosCurPara&&ParaCounter>=PosPrePara))
 				MyPainter.setPen(Qt::black);
 			else MyPainter.setPen(QColor(150,150,150));
-		}else if(ChangeColorFlag==2)
-		{
-			if(line-1>=PosPre.ShowPosY&&line-1<=PosCur.ShowPosY)
-				MyPainter.setPen(Qt::black);
-			else MyPainter.setPen(QColor(150,150,150));
-		}else
-		{
-			if(line-1==PosCur.ShowPosY)
-				MyPainter.setPen(Qt::black);
-			else MyPainter.setPen(QColor(150,150,150));
+			MyPainter.drawText(QRect(0,FirstQCharY+DrawY*FontSizeH,FirstQCharX,FontSizeH),
+							   Qt::AlignCenter,QString("%1").arg(ParaCounter));
+			ParaCounter++;
+			MyPainter.setFont(FontRestore);
+			MyPainter.setPen(PenRestore);
 		}
-		MyPainter.drawText(QRect(0,FirstQCharY+(line-1)*FontSizeH,FirstQCharX,FontSizeH),
-						   Qt::AlignCenter,QString("%1").arg(line + DataTextTop));
-	}
-	MyPainter.setPen(QColor(150,150,150));
-	MyPainter.drawText(FirstQCharX+TextBoxWidth-100,FirstQCharY-8,
-						QString("line:%1 colume:%2").arg(PosCur.ShowPosY+DataTextTop+1).arg(PosCur.ShowPosX/FontSizeW));
+	}																	//绘制文本
+
 	MyScrollBar->move(FirstQCharX+TextBoxWidth+5,FirstQCharY);
 	MyScrollBar->setFixedSize(15,newHeigh);
 	MyScrollBar->setRange(0,DataTextHeight-1);
@@ -869,14 +977,11 @@ void MainWindow::on_action_Open_triggered()
 	if (maybeSave())
 	{
     //ok to open file
-		ProtectedUpdateTimer = 0;
-		disconnect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(GetDataHeight()));
         QString path = QFileDialog::getOpenFileName(this);
 		if (!path.isEmpty())
 		{
             openFile(path);
         }
-		connect(&MyProtectedUpdateTimer, SIGNAL(timeout()),this,SLOT(GetDataHeight()));
     }
 }
 void MainWindow::on_action_Save_triggered()
@@ -885,7 +990,53 @@ void MainWindow::on_action_Save_triggered()
 }
 void MainWindow::on_action_SaveAs_triggered()
 {
-    saveAs();
+	saveAs();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *ev)
+{
+	ev->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *ev)
+{
+	int x = ev->pos().x() - FirstQCharX;
+	int y = (ev->pos().y() - FirstQCharY)/FontSizeH;
+
+	if(x<0)x=0;
+	x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
+	if(y<0)LocateLeftUpCursor(DataTextTop-1);
+	if(y>=TextBoxHeight)LocateLeftUpCursor(DataTextTop+1);
+
+	LocateCursor(x,y);
+	PosPre = PosCur;
+	CursorTimer=1;
+	MyCursorTimer.start(700);
+	ProtectedUpdate();
+}
+
+void MainWindow::dropEvent(QDropEvent *ev)
+{
+	qDebug()<<"111";
+	if(ev->mimeData()->hasFormat("text/uri-list"))
+	{
+		QString fileName = (ev->mimeData()->urls()).first().toLocalFile();
+		if(!fileName.isEmpty())
+		{
+			if(maybeSave())
+			{
+				openFile(fileName);
+			}
+		}
+	}else
+	{
+		if(ev->mimeData()->text() == "")return;
+		if(PosCur.ShowPosY<0)PosLeftUp.DataPos = data.begin();
+		PosCur.DataPos=data.add(PosCur.DataPos,ev->mimeData()->text());
+		PosPre = PosCur;
+		GetDataHeight();
+		FindCursor();
+	}
 }
 void MainWindow::on_action_Exit_triggered()
 {
@@ -999,43 +1150,28 @@ void MainWindow::on_action_Find_triggered()
 }
 void MainWindow::on_action_FindNext_triggered()
 {
-	if(ProtectedUpdateTimer == 0)return;
 	if(replaceDlg->findLeText() == "")return;
+	auto i = data.begin();
 	if(PosCur.DataPos == PosPre.DataPos)
+		i = data.find(PosCur.DataPos, replaceDlg->findLeText());
+	else if(PosCur.ShowPosX + TextBoxWidth * PosCur.ShowPosY < PosPre.ShowPosX + TextBoxWidth * PosPre.ShowPosY)
+		i = data.find(PosCur.DataPos + 1, replaceDlg->findLeText());
+	else
+		i = data.find(PosPre.DataPos + 1, replaceDlg->findLeText());
+
+	if(i)
 	{
-		auto i = data.find(PosCur.DataPos, replaceDlg->findLeText());
-		if(i)
-		{
-			PosCur.DataPos = i;
-			PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
-		}else
-		{
-			i = data.find(data.begin(), replaceDlg->findLeText());
-			if(i){
-				PosCur.DataPos = i;
-				PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
-			}else
-			{
-				QMessageBox::information(this,"MiniWord","无法找到此字符串");
-			}
-		}
+		PosCur.DataPos = i;
+		PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
 	}else
 	{
-		auto i = data.find(PosCur.DataPos + 1, replaceDlg->findLeText());
-		if(i)
-		{
+		i = data.find(data.begin(), replaceDlg->findLeText());
+		if(i){
 			PosCur.DataPos = i;
 			PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
 		}else
 		{
-			i = data.find(data.begin(), replaceDlg->findLeText());
-			if(i){
-				PosCur.DataPos = i;
-				PosPre.DataPos = PosCur.DataPos + replaceDlg->findLeText().length();
-			}else
-			{
-				QMessageBox::information(this,"MiniWord","无法找到此字符串");
-			}
+			QMessageBox::information(this,"MiniWord","无法找到此字符串");
 		}
 	}
 	GetDataHeight();
@@ -1049,19 +1185,56 @@ void MainWindow::on_action_Replace_triggered()
 void MainWindow::data_replace()
 {
 	if(ProtectedUpdateTimer == 0)return;
-	if(replaceDlg->findLeText() == "")return;
+	if(replaceDlg->findLeText() == ""||replaceDlg->replaceLeText() == "")return;
+	if(replaceDlg->findLeText() == replaceDlg->replaceLeText())return;
+	if(PosCur.DataPos == PosPre.DataPos)
+	{
+		on_action_FindNext_triggered();
+		return;
+	}else
+	{
+		int PareLen = 0;
+		int StrLen = replaceDlg->findLeText().length();
+		if(PosCur.ShowPosX + TextBoxWidth * PosCur.ShowPosY < PosPre.ShowPosX + TextBoxWidth * PosPre.ShowPosY)
+		{
+			for(auto i = PosCur.DataPos;i != PosPre.DataPos && PareLen != StrLen;i++)
+			{
+				if((*i) == replaceDlg->findLeText()[PareLen])PareLen++;
+				else break;
+			}
+			if(PareLen == StrLen)
+				PosPre.DataPos = PosCur.DataPos = data.edit(PosCur.DataPos,PosPre.DataPos,replaceDlg->replaceLeText());
+			else return on_action_FindNext_triggered();
+		}else
+		{
+			for(auto i = PosPre.DataPos;i != PosCur.DataPos && PareLen != StrLen;i++)
+			{
+				if((*i) == replaceDlg->findLeText()[PareLen])PareLen++;
+				else break;
+			}
+			if(PareLen == StrLen)
+				PosPre.DataPos = PosCur.DataPos = data.edit(PosPre.DataPos,PosCur.DataPos,replaceDlg->replaceLeText());
+			else
+			{
+				on_action_FindNext_triggered();
+				return;
+			}
+		}
+	}
+	PosLeftUp.DataPos = data.begin();
+	on_action_FindNext_triggered();
 }
 
 void MainWindow::data_replace_all()
 {
 	if(ProtectedUpdateTimer == 0)return;
-	if(replaceDlg->findLeText() == "")return;
+	if(replaceDlg->findLeText() == ""||replaceDlg->replaceLeText() == "")return;
+	if(replaceDlg->findLeText() == replaceDlg->replaceLeText())return;
 	int len = replaceDlg->findLeText().length();
 	auto i = data.begin();
 	while(i = data.find(i,replaceDlg->findLeText()))
 	{
 		i = data.edit(i,(i+len),replaceDlg->replaceLeText());
-		i++;
 	}
 	PosLeftUp.DataPos = PosPre.DataPos = PosCur.DataPos = data.begin();
 	GetDataHeight();
@@ -1251,11 +1424,11 @@ void MainWindow:: LocateLeftUpCursor(int newDataTextTop,int flag)
 	PosPre.ShowPosY -= newDataTextTop - DataTextTop;
 	auto i = data.begin();
 	int NextDataTextTop = newDataTextTop;
-	if(newDataTextTop > DataTextTop&&flag == 0)
+	if(newDataTextTop > DataTextTop && flag == 0)
 	{
 		i = PosLeftUp.DataPos;
 		newDataTextTop -= DataTextTop;
-	}
+	}else DataParaTop = 0;
 	PosLeftUp.DataPos = i;
 	int MoveX = 0;
 	int MoveY = 0;
@@ -1265,6 +1438,7 @@ void MainWindow:: LocateLeftUpCursor(int newDataTextTop,int flag)
 	{
 		if((*i)=='\n')
 		{
+			if(i+1)DataParaTop++;
 			MoveY++;
 			MoveX = 0;
 			i++;
@@ -1390,13 +1564,14 @@ void MainWindow::GetDataHeight()
 	int MoveY = 0;
 	int PosCurX = 0,PosCurY = 0;
 	int PosPreX = 0,PosPreY = 0;
-
+	int ParaNum = 0;
 	i.clear();
 	while(!(i.isOverFlow()))
 	{
 		if(i == PosLeftUp.DataPos)
 		{
 			DataTextTop = MoveY;
+			DataParaTop =  ParaNum;
 			if(MoveX!=0)DataTextTop++;
 		}
 		if(i == PosCur.DataPos)
@@ -1411,6 +1586,7 @@ void MainWindow::GetDataHeight()
 		}
 		if((*i)=='\n')
 		{
+			if(i+1)ParaNum++;
 			MoveY++;
 			MoveX = 0;
 			i++;
@@ -1546,4 +1722,114 @@ void MainWindow::on_action_Setting_triggered()
 		ChangeFontSize((settingsDlg->defaultFontSize() + 1) * 4);
 		ProtectedUpdate();
 	}
+}
+
+void MainWindow::on_action_GetCharNum_triggered()
+{
+	auto it_begin = data.begin();
+	auto it_end = data.end();
+	int All_num = 0,Chinese_char_num = 0,English_char_num = 0,Para_num = 1,Number_num = 0,Other_num = 0;
+	if(PosCur.DataPos != PosPre.DataPos)
+		if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
+		{
+			it_begin = PosCur.DataPos;
+			it_end = PosPre.DataPos;
+		}else
+		{
+			it_begin = PosPre.DataPos;
+			it_end = PosCur.DataPos;
+		}
+	while(it_begin != it_end)
+	{
+		All_num++;
+		if(*it_begin >= 0x4e00&& *it_begin <= 0x9fa5)
+		{
+			Chinese_char_num++;
+		}else if((*it_begin >= 'A' && *it_begin <= 'Z')||(*it_begin >= 'a' && *it_begin <= 'z'))
+		{
+			English_char_num++;
+		}else if(*it_begin >= '0' && *it_begin <= '9')
+		{
+			Number_num++;
+		}else if(*it_begin == '\n')
+		{
+			Para_num++;
+		}else
+		{
+			Other_num++;
+		}
+		it_begin++;
+	}
+	charnumDlg->SetCharNum(All_num,Chinese_char_num,English_char_num,Para_num,Number_num,Other_num);
+	charnumDlg->exec();
+}
+
+void MainWindow::on_action_AddTime_triggered()
+{
+	if(ProtectedUpdateTimer == 0)return;
+	PosPre.DataPos = PosCur.DataPos = data.add(data.end(),"\n"+QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd"));
+	GetDataHeight();
+	FindCursor();
+}
+
+void MainWindow::on_action_toLine_triggered()
+{
+	int toLine = QInputDialog::getInt(this,"MiniWord-转到行","请输入行号",QLineEdit::NoEcho);
+	if(toLine >= 1&&toLine <= DataTextHeight)
+	{
+		LocateLeftUpCursor(toLine - 1);
+		PosCur.DataPos = PosLeftUp.DataPos;
+		PosCur.ShowPosX = 0;
+		PosCur.ShowPosY = 0;
+		PosPre = PosCur;
+		ProtectedUpdate();
+	}else
+	{
+		QMessageBox::information(this,"MiniWord","行数不存在");
+	}
+}
+
+void MainWindow::on_action_toParagraph_triggered()
+{
+	int toPara = QInputDialog::getInt(this,"MiniWord-转到段","请输入段号",QLineEdit::NoEcho);
+	if(toPara > 0)
+	{
+		int paraCur = 1;
+		auto i = data.begin();
+		while(i && paraCur != toPara)
+		{
+			if(*i == '\n')
+			{
+				i++;
+				if(i)
+				{
+					paraCur++;
+				}
+			}else i++;
+		}
+		if(paraCur == toPara)
+		{
+			PosPre.DataPos = PosCur.DataPos = PosLeftUp.DataPos = i;
+			GetDataHeight();
+			ProtectedUpdate();
+		}else
+		{
+			QMessageBox::information(this,"MiniWord","段数不存在");
+		}
+	}else
+	{
+		QMessageBox::information(this,"MiniWord","段数不存在");
+	}
+}
+
+void MainWindow::on_action_ShowLine_triggered()
+{
+	if(LineShowFlag == 0)
+	{
+		LineShowFlag = 1;
+	}else if(LineShowFlag == 1)
+	{
+		LineShowFlag = 0;
+	}
+	ProtectedUpdate();
 }

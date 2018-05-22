@@ -59,9 +59,20 @@
     <addaction name="action_Setting"/>
     <addaction name="action_Help"/>
    </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>审阅</string>
+    </property>
+    <addaction name="action_toLine"/>
+    <addaction name="action_toParagraph"/>
+    <addaction name="action_GetCharNum"/>
+    <addaction name="action_AddTime"/>
+    <addaction name="action_ShowLine"/>
+   </widget>
    <addaction name="menu_F"/>
    <addaction name="menu_E"/>
    <addaction name="menu_H"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -203,6 +214,46 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="action_GetCharNum">
+   <property name="text">
+    <string>字符统计</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="action_AddTime">
+   <property name="text">
+    <string>附加日期</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="action_toLine">
+   <property name="text">
+    <string>转到行</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="action_toParagraph">
+   <property name="text">
+    <string>转到段</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="action_ShowLine">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>按行显示行号</string>
    </property>
   </action>
  </widget>
