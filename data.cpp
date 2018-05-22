@@ -44,7 +44,6 @@ Data::Heap *Data::addHeap(Data::Heap *heapp)
 	}
 	heapp->nextHeap = newHeap;
 
-	++heapp->parentNode->heapNum;
 	return newHeap;
 }
 
@@ -106,14 +105,12 @@ void Data::delHeap(Data::Heap *heapp)
 			heapp->parentNode->firstHeap = heapp->nextHeap;
 			heapp->nextHeap->preHeap = NULL;
 			heapp->preHeap = heapp->nextHeap = NULL;
-			--heapp->parentNode->heapNum;
 		}
 	} else {//the heap is not the first heap
 		heapp->preHeap->nextHeap = heapp->nextHeap;
 		if (heapp->nextHeap){
 			heapp->nextHeap->preHeap = heapp->preHeap;
 		}
-		--heapp->parentNode->heapNum;
 		heapp->preHeap = heapp->nextHeap = NULL;
 	}
 	delete heapp;
@@ -138,8 +135,6 @@ void Data::mergeNextNode(Data::Node *nodep)
 	auto p = nodep->nextNode->firstHeap;
 	while (p){
 		p->parentNode = nodep;//change parent
-		--nodep->nextNode->heapNum;
-		++nodep->heapNum;
 		p = p->nextHeap;
 	}
 
@@ -566,7 +561,7 @@ void Data::clear()
 //! if there is only one node and one heap and one char and the char is '\n' return true
 bool Data::isEmpty()
 {
-	if (nodeNum == 1 && firstNode->heapNum == 1 && firstNode->firstHeap->charNum == 1) return true;
+	if (nodeNum == 1 && firstNode->heapNum() == 1 && firstNode->firstHeap->charNum == 1) return true;
 	else return false;
 }
 
@@ -837,7 +832,6 @@ Data::Node::Node(Data *m_parent, Heap *source)
 {
 	preNode = NULL;
 	nextNode = NULL;
-	heapNum = 1;
 	parent = m_parent;
 
 	if (source){
@@ -848,7 +842,6 @@ Data::Node::Node(Data *m_parent, Heap *source)
 		while (source->nextHeap){
 			source = source->nextHeap;
 			source->parentNode = this;
-			++heapNum;
 		}
 	} else {
 		firstHeap = new Heap(this);
@@ -869,6 +862,17 @@ Data::Node::~Node()
 		p = p->nextHeap;
 		delete q;
 	}
+}
+
+int Data::Node::heapNum()
+{
+	auto p = firstHeap;
+	int result = 0;
+	while (p){
+		p = p->nextHeap;
+		++result;
+	}
+	return result;
 }
 
 //! return char count in the whole node
@@ -903,7 +907,7 @@ Data::iterator Data::Node::begin()
 //! "n" must be valid
 Data::Heap & Data::Node::operator[](int n)
 {
-	if (n > heapNum - 1){//not in this node
+	if (n > heapNum() - 1){//not in this node
 		qDebug() << "Data::Node::operator[]::heap index overflow";
 	} else {//in this node
 		auto heap = firstHeap;
@@ -958,20 +962,22 @@ void Data::Heap::moveToNewNode(int start)
 	nextHeap = NULL;
 	charNum = start + 1;
 	ch[charNum - 1] = '\n';
-
-	//refresh heapNum
-	parentNode->heapNum = 0;
-	auto p = parentNode->firstHeap;
-	while (p){
-		++parentNode->heapNum;
-		p = p->nextHeap;
-	}
 }
 
 //! return the n-th char in this heap
 //!"n" must be valid, so the funcion is not safe enough
 QChar Data::Heap::operator[](int n) const
 {
+	if (n > charNum - 1){//not in this heap
+		qDebug() << "Data::Heap::operator[]::index overflow";
+	} else {//in this heap
+		return ch[n];
+	}
+}
+
+//! return the reference of the n-th char in this heap
+//! "n" must be valid
+QChar & Data::Heap::operator[](int n){
 	if (n > charNum - 1){//not in this heap
 		qDebug() << "Data::Heap::operator[]::index overflow";
 	} else {//in this heap
@@ -1030,16 +1036,16 @@ Data::iterator Data::Heap::add(const QString & str, int index)
 		int n = 0;//index to str
 		Heap * currentHeap = this;
 		while (n < str.length()){
-			currentHeap->ch[index] = str[n];
-			++currentHeap->charNum;
-			++index;
-			++n;
 			if (index > 99){//currentHeap is full, get a new one
 				currentHeap = parentNode->parent->addHeap(currentHeap);
 				index = 0;
 			}
+			currentHeap->ch[index] = str[n];
+			++currentHeap->charNum;
+			++index;
+			++n;
 		}
-		return iterator(parentNode, currentHeap, index) + 1;
+		return iterator(parentNode, currentHeap, index - 1) + 1;
 	}
 }
 

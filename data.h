@@ -36,7 +36,6 @@ private:
 		//methods
 		void moveToNextHeap(int start);//move chars from start of the heap to the next heap, include start
 		void moveToNewNode(int start);//include start
-		void move(int start, int offset);//offset must be positive, move right, include start
 		iterator add(const QString & str, int index);//if index == -1 then add to the tail, str CAN NOT include \n
 		iterator begin();
 		void del(int index);
@@ -54,10 +53,9 @@ private:
 		Node * nextNode;//pointer to the next node
 		Heap * firstHeap;
 		Data * parent;
-		int heapNum;
-		//int widthUnitNum;
 
 		//methods
+		int heapNum();
 		int charNum();
 		Heap * lastHeap();
 		iterator begin();
