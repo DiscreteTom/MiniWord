@@ -10,6 +10,17 @@
 //! add a node after "nodep", with "source"(see Data::Node)
 //! "nodep" can not be NULL
 //! "source" can be NULL
+int Data::nodeNum() const
+{
+	auto p = firstNode;
+	int result = 0;
+	while (p){
+		p = p->nextNode;
+		++result;
+	}
+	return result;
+}
+
 Data::Node *Data::addNode(Data::Node * nodep, Heap *source)
 {
 	if (!nodep) return NULL;//error
@@ -24,7 +35,6 @@ Data::Node *Data::addNode(Data::Node * nodep, Heap *source)
 	}
 	nodep->nextNode = newNode;
 
-	++nodeNum;
 	return newNode;
 }
 
@@ -65,10 +75,8 @@ void Data::delNode(Data::Node *nodep)
 			}
 			nodep->firstHeap->ch[0] = '\n';
 			nodep->firstHeap->charNum = 1;//'\n'
-			nodeNum = 1;
 			return;
 		} else {//not the only node and is the first node
-			--nodeNum;
 			//change first node
 			firstNode = nodep->nextNode;
 			//cancel link
@@ -82,7 +90,6 @@ void Data::delNode(Data::Node *nodep)
 		if (nodep->nextNode){
 			nodep->nextNode->preNode = nodep->preNode;
 		}
-		--nodeNum;
 		//cancel link
 		nodep->nextNode = nodep->preNode = NULL;
 	}
@@ -168,7 +175,6 @@ void Data::mergeNextHeap(Data::Heap *heapp)
 Data::Data(QObject *parent) : QObject(parent)
 {
 	firstNode = new Node(this);
-	nodeNum = 1;
 	stackDepth = 20;
 }
 
@@ -251,7 +257,7 @@ Data::iterator Data::iteratorAt(int parentNodeIndex, int parentHeapIndex, int in
 //! return the node of index n in Data
 Data::Node & Data::operator[](int n)
 {
-	if (n >= nodeNum || n < 0){
+	if (n >= nodeNum() || n < 0){
 		qDebug() << "Data::operator[]::index overflow";
 	} else {//n is legal
 		auto p = firstNode;
@@ -561,7 +567,7 @@ void Data::clear()
 //! if there is only one node and one heap and one char and the char is '\n' return true
 bool Data::isEmpty()
 {
-	if (nodeNum == 1 && firstNode->heapNum() == 1 && firstNode->firstHeap->charNum == 1) return true;
+	if (nodeNum() == 1 && firstNode->heapNum() == 1 && firstNode->firstHeap->charNum == 1) return true;
 	else return false;
 }
 
@@ -690,6 +696,7 @@ QChar Data::iterator::operator*() const
 //! if no next place, return overflow
 Data::iterator Data::iterator::operator++()
 {
+	if (overflow) return *this;
 	++m_index;
 	if (m_index >= m_parentHeap->charNum){//not int this heap
 		if (m_parentHeap->nextHeap){//next heap exists
@@ -724,6 +731,7 @@ Data::iterator Data::iterator::operator++(int)
 //! if no pre char, return overflow
 Data::iterator Data::iterator::operator--()
 {
+	if (overflow) return *this;
 	--m_index;
 	if (m_index < 0){//not in this heap
 		if (m_parentHeap->preHeap){//pre heap exists
@@ -864,7 +872,7 @@ Data::Node::~Node()
 	}
 }
 
-int Data::Node::heapNum()
+int Data::Node::heapNum() const
 {
 	auto p = firstHeap;
 	int result = 0;
@@ -876,7 +884,7 @@ int Data::Node::heapNum()
 }
 
 //! return char count in the whole node
-int Data::Node::charNum()
+int Data::Node::charNum() const
 {
 	int result = 0;
 	auto p = firstHeap;

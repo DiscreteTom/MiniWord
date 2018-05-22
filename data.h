@@ -55,8 +55,8 @@ private:
 		Data * parent;
 
 		//methods
-		int heapNum();
-		int charNum();
+		int heapNum() const ;
+		int charNum() const ;
 		Heap * lastHeap();
 		iterator begin();
 
@@ -95,13 +95,13 @@ private:
 	};
 
 	//============== private variable =====================
-	int nodeNum;
 	Node * firstNode;
 	int stackDepth;
 	ActionStack undoStack;
 	ActionStack redoStack;
 
 	//============== private methods ==============
+	int nodeNum() const ;
 	Node * addNode(Node * nodep, Heap * source = NULL);//add a node after nodep
 	Heap * addHeap(Heap * heapp);//add a heap after heapp
 	void delNode(Node * nodep);
@@ -134,14 +134,12 @@ public:
 		int parentNodeIndex() const ;//return -1 if error
 		int parentHeapIndex() const ;
 
-		//void move(int unitWidthCount, int windowUnitCount);//unitWidthCount can be minus
-
 		//inline methods
 		bool isOverFlow() const {return overflow;}
-		void clear() {overflow = false;}
 		Node * parentNode() const {return m_parentNode;}
 		Heap * parentHeap() const {return m_parentHeap;}
 		int index() const {return m_index;}
+		void clear() {overflow = false;}
 
 		//----- operator overload -----
 		QChar operator*() const ;
@@ -154,11 +152,11 @@ public:
 		iterator operator-(int n) const ;
 		bool operator==(const iterator & another) const ;
 		bool operator!=(const iterator & another) const ;
-		int operator-(const iterator & another) const ;//return width unit
+		int operator-(const iterator & another) const ;
 		iterator operator=(const iterator & another);
 
 		//------ convert to bool -------
-		operator bool(){return !overflow;}
+		operator bool() const {return !overflow;}
 	};
 
 	//=========== about iterator ===========
@@ -195,7 +193,5 @@ signals:
 	void dataChanged();
 public slots:
 };
-
-//int charWidth(QChar ch);
 
 #endif // DATA_H
