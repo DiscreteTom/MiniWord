@@ -270,15 +270,15 @@ Data::Node & Data::operator[](int n)
 }
 
 //! add a string "str" at "locate"
-Data::iterator Data::add(const Data::iterator & locate, const QString & str, ActionStack::UndoType undo)
+Data::iterator Data::add(const Data::iterator & locate, const QString & str, ActionStack::UndoType undo, bool hind)
 {
 	//! deal with '\n' in this function
 	if (!str.length()) return locate;
 
 	if (undo == ActionStack::UndoType::UNDO){
-		redoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::DEL, str));
+		redoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::DEL, str, hind));
 	} else {
-		undoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::ADD, str));
+		undoStack.push(Action(locate.parentNodeIndex(), locate.parentHeapIndex(), locate.index(), Action::ADD, str, hind));
 		if (undo == ActionStack::UndoType::NORMAL) redoStack.clear();
 	}
 
@@ -286,10 +286,14 @@ Data::iterator Data::add(const Data::iterator & locate, const QString & str, Act
 
 	if (str.length() == 1){
 		//! single char
-		if (str[0] != '\n') result = locate.parentHeap()->add(str, locate.index());
-		else {//'\n'
+		if (str[0] != '\n'){
+			result = locate.parentHeap()->add(str, locate.index());
+		} else {//'\n'
 			locate.parentHeap()->moveToNewNode(locate.index());
 			result = locate + 1;//locate won't overflow, this step is safe
+		}
+		if (hind && result - 1){
+			--result;
 		}
 	} else {
 		//! a string
@@ -368,9 +372,9 @@ Data::iterator Data::del(const Data::iterator & startLocate, const Data::iterato
 		}
 
 		if (undo == ActionStack::UndoType::UNDO){
-			redoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::ADD, aimChar));
+			redoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::ADD, aimChar, hind));
 		} else {
-			undoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::DEL, aimChar));
+			undoStack.push(Action(result.parentNodeIndex(), result.parentHeapIndex(), result.index(), Action::DEL, aimChar, hind));
 			if (undo == ActionStack::UndoType::NORMAL) redoStack.clear();
 		}
 
@@ -524,11 +528,16 @@ Data::iterator Data::undo(const iterator &now)
 		if (a.m_type == Action::ADD){
 			//need del
 			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
-			iterator result = del(startLocate, startLocate + a.m_str.length(), false, ActionStack::UndoType::UNDO);
-			return result;
+			if (a.m_hind){
+				iterator result = del(startLocate, startLocate, a.m_hind, ActionStack::UndoType::UNDO);
+				return result;
+			} else {
+				iterator result = del(startLocate, startLocate + a.m_str.length(), a.m_hind, ActionStack::UndoType::UNDO);
+				return result;
+			}
 		} else if (a.m_type == Action::DEL){
 			//need add
-			iterator result = add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::UNDO);
+			iterator result = add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::UNDO, a.m_hind);
 			return result;
 		}
 	} else {//undo stack is empty
@@ -544,11 +553,16 @@ Data::iterator Data::redo(const Data::iterator &now)
 		if (a.m_type == Action::DEL){
 			//need del
 			iterator startLocate = iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap);
-			iterator result = del(startLocate, startLocate + a.m_str.length(), false, ActionStack::UndoType::REDO);
-			return result;
+			if (a.m_hind){
+				iterator result = del(startLocate, startLocate, a.m_hind, ActionStack::UndoType::REDO);
+				return result;
+			} else {
+				iterator result = del(startLocate, startLocate + a.m_str.length(), a.m_hind, ActionStack::UndoType::REDO);
+				return result;
+			}
 		} else if (a.m_type == Action::ADD){
 			//need add
-			return add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::REDO);
+			return add(iteratorAt(a.nodeIndex, a.heapIndex, a.indexInHeap), a.m_str, ActionStack::UndoType::REDO, a.m_hind);
 		}
 	} else {//redo stack is empty
 		return now;

@@ -72,9 +72,10 @@ private:
 		int indexInHeap;
 		Type m_type;
 		QString m_str;
+		bool m_hind;
 
-		Action(int locateNode = -1, int locateHeap = -1, int index = -1, Type type = ADD, QString str = "")
-			:nodeIndex(locateNode), heapIndex(locateHeap), indexInHeap(index), m_type(type), m_str(str) {}
+		Action(int locateNode = -1, int locateHeap = -1, int index = -1, Type type = ADD, QString str = "", bool hind = false)
+			:nodeIndex(locateNode), heapIndex(locateHeap), indexInHeap(index), m_type(type), m_str(str), m_hind(hind) {}
 	};
 	class ActionStack{
 	private:
@@ -166,7 +167,7 @@ public:
 	iterator iteratorAt(int parentNodeIndex, int parentHeapIndex, int indexInHeap);
 
 	//========== about text edit ========
-	iterator add(const iterator & locate, const QString & str, ActionStack::UndoType undo = ActionStack::UndoType::NORMAL);
+	iterator add(const iterator & locate, const QString & str, ActionStack::UndoType undo = ActionStack::UndoType::NORMAL, bool hind = false);
 	iterator del(const iterator & startLocate, const iterator & endLocate, bool hind = false, ActionStack::UndoType undo = ActionStack::UndoType::NORMAL);
 	iterator edit(const iterator & startLocate, const iterator & endLocate, const QString & str);
 	iterator find(const iterator & startLocate, const QString & str);
