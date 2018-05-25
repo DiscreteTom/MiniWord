@@ -62,6 +62,7 @@ private slots:
 	void data_replace_all();
 
     //============== about menu ==============
+	void getMenu_F_state();
     void getMenu_E_state();
 
 	//============== about update ============

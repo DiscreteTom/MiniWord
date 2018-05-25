@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(&data, &Data::dataChanged, this, &MainWindow::getDataChanged);
 	//================== right click menu ============
 	initRightMenu();
+	connect(ui->menu_F, &QMenu::aboutToShow, this, &MainWindow::getMenu_F_state);
 	connect(ui->menu_E, &QMenu::aboutToShow, this, &MainWindow::getMenu_E_state);
 	//================== dialog ========
 	replaceDlg = new ReplaceDlg(this);
@@ -580,9 +581,9 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 	GetDataHeight();
 	FindCursor();
 }
-void MainWindow::mousePressEvent(QMouseEvent * ev)
+void MainWindow::mousePressEvent(QMouseEvent * event)
 {
-	if (ev->button() == Qt::RightButton)//show right click menu
+	if (event->button() == Qt::RightButton)//show right click menu
 	{
         //judge function state
 		if (!PosCur.DataPos || !PosPre.DataPos || PosCur.DataPos == PosPre.DataPos)
@@ -600,12 +601,12 @@ void MainWindow::mousePressEvent(QMouseEvent * ev)
 		{
 			redoAction->setDisabled(true);
 		}
-		rightMenu->exec(ev->screenPos().toPoint());
+		rightMenu->exec(event->screenPos().toPoint());
         resetRightMenu();
-	}else if(ev->button() == Qt::LeftButton)
+	}else if(event->button() == Qt::LeftButton)
 	{
-		int x = ev->pos().x() - FirstQCharX;
-		int y = (ev->pos().y() - FirstQCharY)/FontSizeH;
+		int x = event->pos().x() - FirstQCharX;
+		int y = (event->pos().y() - FirstQCharY)/FontSizeH;
 		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
 		y = (y>TextBoxHeight-1?TextBoxHeight-1:y);
 		LocateCursor(x,y);
@@ -625,17 +626,31 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *ev)
 {
 	if(ev->button() == Qt::LeftButton)
 	{
-		PosPre.DataPos = PosCur.DataPos--;
+		if(TabStyle == 3)
+		{
+			while(PosPre.DataPos-1&&*(PosPre.DataPos-1)!='\t'&&*(PosPre.DataPos-1)!='\n')
+			{
+				PosPre.DataPos--;
+			}
+			while(PosCur.DataPos&&*PosCur.DataPos!='\t'&&*PosCur.DataPos!='\n')
+			{
+				PosCur.DataPos++;
+			}
+			PosCur.DataPos.clear();
+		}else
+		{
+			PosPre.DataPos = PosCur.DataPos--;
+		}
 		GetDataHeight();
 		ProtectedUpdate();
 	}
 	IsDragged = false;
 }
-void MainWindow::mouseMoveEvent(QMouseEvent *ev)
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
 	if(ProtectedUpdateTimer == 0)return;
-	int x = ev->pos().x() - FirstQCharX;
-	int y = (ev->pos().y() - FirstQCharY)/FontSizeH;
+	int x = event->pos().x() - FirstQCharX;
+	int y = (event->pos().y() - FirstQCharY)/FontSizeH;
 
 	if(x>=0&&x<TextBoxWidth&&y>=0&&y<TextBoxHeight)
 	{
@@ -644,7 +659,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *ev)
 		setCursor(Qt::ArrowCursor);
 	}
 
-	if((ev->buttons() & Qt::LeftButton) && IsDragged)
+	if((event->buttons() & Qt::LeftButton) && IsDragged)
 	{
 		if(x<0)x=0;
 		x = (x>TextBoxWidth-FontSizeW/2?TextBoxWidth-FontSizeW/2:x);
@@ -1287,7 +1302,16 @@ void MainWindow::getMenu_E_state()
 	}
 	ui->action_SelectAll->setDisabled(false);
 }
-
+void MainWindow::getMenu_F_state()
+{
+	if(!shouldSave)
+	{
+		ui->action_Save->setDisabled(true);
+	}else
+	{
+		ui->action_Save->setDisabled(false);
+	}
+}
 void MainWindow::getDataChanged()
 {
 	shouldSave = true;
@@ -1695,6 +1719,8 @@ void MainWindow::ProtectedUpdate()
 void MainWindow::RefreshProtectTimer()
 {
 	ProtectedUpdateTimer = 1;
+	PosCur.DataPos.clear();
+	PosPre.DataPos.clear();
 	int newScrollPos = MyScrollBar->sliderPosition();
 	if(newScrollPos != oldScrollPos)
 	{
