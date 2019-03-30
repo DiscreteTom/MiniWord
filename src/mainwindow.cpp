@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	replaceDlg = new ReplaceDlg(this);
 	settingsDlg = new SettingDlg(this);
 	charnumDlg = new CharNumDlg(this);
+	helpDlg  = new HelpDialog(this);
 	getConfig();
 	data.resetStackSize(settingsDlg->maxUndoTime());
 	connect(replaceDlg,SIGNAL(FindNext()),this,SLOT(on_action_FindNext_triggered()));
@@ -50,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	setMouseTracking(true);
 	centralWidget()->setAcceptDrops(true);
 	setAcceptDrops(true);
+	InputPreStr = "";
+	InputPreStrPos = 0;
 
 	//==================== interface ====================
 	MyCursorTimer.start(700);
@@ -232,7 +235,7 @@ void MainWindow::getConfig()
 		settingsDlg->setMaxUndoTime(20);
 		settingsDlg->setFontSize(20);
 		settingsDlg->setFontSize(1);
-		FontSizeW = 8;
+		FontSizeW = 10;
 		FontSizeH = 16;
 		settingsDlg->setSpaceStyle(1);
 		SpaceStyle = 0;
@@ -530,6 +533,12 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		LocateLeftUpCursor(DataTextHeight-1);
 		ProtectedUpdate();
         break;
+	case Qt::Key_Shift:
+
+		break;
+	case Qt::Key_Control:
+
+		break;
     default :
 		if(QApplication::keyboardModifiers () == Qt::ControlModifier)return;
 		if(ev->text()=="")return;
@@ -559,8 +568,18 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 {
 	CursorTimer=1;
 	MyCursorTimer.start(700);
-	if(QApplication::keyboardModifiers () == Qt::ControlModifier)return;
-	if(ev->commitString()=="")return;
+	if(ev->commitString()=="")
+	{
+		if((InputPreStr = ev->preeditString())!="")
+		{
+			InputPreStrPos = ev->attributes().back().start;
+		}else
+		{
+			InputPreStrPos = 0;
+		}
+		ProtectedUpdate();
+		return;
+	}
 	if(PosCur.ShowPosY<0||PosPre.ShowPosY<0)PosLeftUp.DataPos = data.begin();
 	if(PosCur.DataPos==PosPre.DataPos)
 	{
@@ -578,6 +597,8 @@ void MainWindow::inputMethodEvent(QInputMethodEvent * ev)
 			PosPre = PosCur;
 		}
 	}
+	InputPreStr = "";
+	InputPreStrPos = 0;
 	GetDataHeight();
 	FindCursor();
 }
@@ -984,6 +1005,25 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 	MyScrollBar->setFixedSize(15,newHeigh);
 	MyScrollBar->setRange(0,DataTextHeight-1);
 	MyScrollBar->setSliderPosition(DataTextTop);
+
+	if(!InputPreStr.isEmpty())
+	{
+		int len = FontSizeW*InputPreStr.length()+7;
+		int start = PosCur.ShowPosX-1;
+		if(start+len>TextBoxWidth)start = TextBoxWidth-len;
+		MyPainter.setFont(QFont("楷体",FontSizeW*10/6));
+		MyPainter.setPen(Qt::black);
+		MyPainter.drawRect(start+FirstQCharX,FontSizeH*PosCur.ShowPosY+FirstQCharY,
+						   len,FontSizeH+2);
+		MyPainter.fillRect(start+FirstQCharX,FontSizeH*PosCur.ShowPosY+FirstQCharY,
+						   len,FontSizeH+2,Qt::white);
+		for(int i=0;i<len;i++)
+			MyPainter.drawText(FirstQCharX+start+i*FontSizeW+3,FontSizeH*(1+PosCur.ShowPosY)+FirstQCharY,
+							   QString("%1").arg(InputPreStr[i]));
+
+		MyPainter.drawLine(FirstQCharX+start+InputPreStrPos*FontSizeW+3,FontSizeH*PosCur.ShowPosY+FirstQCharY+1,
+						   FirstQCharX+start+InputPreStrPos*FontSizeW+3,FontSizeH*(PosCur.ShowPosY+1)+FirstQCharY);
+	}
 
 	CursorTimer=!CursorTimer;
 }
@@ -1862,4 +1902,8 @@ void MainWindow::on_action_ShowLine_triggered()
 		LineShowFlag = 0;
 	}
 	ProtectedUpdate();
+}
+void MainWindow::on_action_Help_triggered()
+{
+	helpDlg->show();
 }

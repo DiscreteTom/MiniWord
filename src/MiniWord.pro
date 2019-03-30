@@ -28,17 +28,20 @@ SOURCES += main.cpp\
     replacedlg.cpp \
     data.cpp \
     settingdlg.cpp \
-    charnumdlg.cpp
+    charnumdlg.cpp \
+    helpdialog.cpp
 
 HEADERS  += mainwindow.h \
     data.h \
     replacedlg.h \
     settingdlg.h \
-    charnumdlg.h
+    charnumdlg.h \
+    helpdialog.h
 
 FORMS    += mainwindow.ui \
     replacedlg.ui \
-    settingdlg.ui
+    settingdlg.ui \
+    helpdialog.ui
 
 DISTFILES += \
     README.md

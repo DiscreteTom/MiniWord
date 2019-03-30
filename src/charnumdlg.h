@@ -8,6 +8,7 @@ public:
 	void SetCharNum(int allnum, int Chinesenum, int Englishnum, int paranum, int numbernum, int othernum);
 protected:
 	void paintEvent(QPaintEvent*ev);
+	void keyPressEvent(QKeyEvent *ev);
 private:
 	int AllNum;
 	int ChineseCharNum;

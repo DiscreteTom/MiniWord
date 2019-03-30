@@ -17,6 +17,7 @@
 #include "data.h"
 #include "settingdlg.h"
 #include "charnumdlg.h"
+#include "helpdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -82,6 +83,8 @@ private slots:
 
 	void on_action_ShowLine_triggered();
 
+	void on_action_Help_triggered();
+
 private:
     Ui::MainWindow *ui;
     //=================== Object ===============================
@@ -99,6 +102,7 @@ private:
     ReplaceDlg * replaceDlg;
 	SettingDlg * settingsDlg;
 	CharNumDlg * charnumDlg;
+	HelpDialog * helpDlg;
 
     //=================== Variable ============================
 
@@ -127,6 +131,9 @@ private:
 	int LineShowFlag;						//行号显示策略
 
 	bool IsDragged;							//判断是否正在拖动鼠标
+
+	QString InputPreStr;
+	int InputPreStrPos;
 
 	int CursorTimer;						//光标闪烁计时器
 	QTimer MyCursorTimer;					//光标闪烁定时器

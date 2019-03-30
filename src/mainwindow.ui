@@ -184,7 +184,7 @@
     <string>替换(&amp;R)</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+H</string>
+    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="action_Redo">

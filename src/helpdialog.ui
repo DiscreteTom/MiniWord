@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HelpDialog</class>
+ <widget class="QDialog" name="HelpDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>485</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QTextBrowser" name="textBrowser">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>500</width>
+     <height>491</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="html">
+    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.1pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:16pt; font-weight:600;&quot;&gt;MiniWord使用说明&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei';&quot;&gt;编制时间：2018.5.25&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei';&quot;&gt;编制人员：吴奕辰 王景辉 张锦程&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei';&quot;&gt;版本号：V1.0&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;img src=&quot;:/new/prefix1/MiniWord.ico&quot; /&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei';&quot;&gt;        &lt;/span&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-weight:600;&quot;&gt; &lt;/span&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:12pt; font-weight:600;&quot;&gt;欢迎使用MiniWord！&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;       点击【文件】按钮来新建、打开、保存、另存为文件，及退出程序。注意按下“新建”按钮后，若当前文件未保存，则会先询问是否保存或取消，然后关闭这个文档，再新建一个空白文档。&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;       点击【编辑】按钮或鼠标右键，可以进行对应的复制粘贴、查找替换、剪切、撤销重做、删除等操作。&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;       点击【设置】按钮，可以进行MiniWord的系统设置，包括最大撤销次数、默认字体大小、Tab（制表符）大小、空格样式、Tab样式等。可以根据自己的需要进行选择。其中空格和Tab样式可以选择【加深】、【表格】等，这是记事本所没有的功能。&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;       点击【审阅】按钮，可以进行【转到行】、【转到段】、【字符统计】、【附加日期】、【按行显示行号】等操作。其中，【字符统计】操作可以统计当前文档中的字符数目、中英文字符数目、文本段落数、数字字符数等；【转到行】输入行数即可转到对应的行；【转到段】输入段落编号即可转到对应的段落；默认状态下不显示行号，只显示段落号,【按行显示行号】操作可以使左侧显示所有行的行号；附加日期可以在文档末尾添加当前时刻。&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;       附：快捷键及对应功能：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;              新建 ctrl + N	打开 ctrl + O	保存 ctrl + S	另存为 ctrl + shift + S&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;              撤销 ctrl + Z	重做 ctrl + Y	剪切 ctrl + X	复制 ctrl +  C，                     &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;              粘贴 ctrl + V	查找 ctrl + F	替换 ctrl + H	全选 ctrl + A，&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;              转到行 ctrl + L	转到段 ctrl + P	字符统计 ctrl + M	附加日期 ctrl + T&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Microsoft yahei'; font-size:10pt;&quot;&gt;              打开帮助文档 ctrl + H		退出 ctrl + W，&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="tabStopWidth">
+    <number>50</number>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
