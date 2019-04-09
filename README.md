@@ -2,6 +2,8 @@
 
 V1.0
 
+![](img/readme.png)
+
 ## Requirement
 
 基于QT开发，运行需要QT提供的动态链接库
