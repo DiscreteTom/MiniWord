@@ -20,6 +20,7 @@ public:
 
 private:
 	//Node declare
+	int codeStyle;
 	class Node;
 
 	//============== private class declaration ===========
@@ -159,6 +160,9 @@ public:
 		//------ convert to bool -------
 		operator bool() const {return !overflow;}
 	};
+	//=========== codeStyle ==============
+	int getCodeStyle()const;
+	void setCodeStyle(int style);
 
 	//=========== about iterator ===========
 	iterator begin();
