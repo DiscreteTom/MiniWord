@@ -135,7 +135,7 @@
      <x>40</x>
      <y>20</y>
      <width>381</width>
-     <height>140</height>
+     <height>147</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -282,6 +282,22 @@
     <hint type="destinationlabel">
      <x>157</x>
      <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SettingDlg</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>270</x>
+     <y>375</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>203</y>
     </hint>
    </hints>
   </connection>
