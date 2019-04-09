@@ -8,6 +8,7 @@ SettingDlg::SettingDlg(QWidget *parent) :
 	ui->setupUi(this);
 
 	setWindowTitle(tr("设置"));
+	ui->codeStyleCB->setCurrentIndex(0);
 }
 
 SettingDlg::~SettingDlg()
@@ -41,10 +42,27 @@ void SettingDlg::setSpaceStyle(int n)
 	}
 }
 
+void SettingDlg::setCodeStyle(int n)
+{
+	if(n >= 0 && n < 3)
+	{
+		ui->codeStyleCB->setCurrentIndex(n);
+	}else
+	{
+		ui->codeStyleCB->setCurrentIndex(0);
+	}
+}
+
 void SettingDlg::setFontSize(int n)
 {
 	if (n < 1 || n > 9) n = 1;
 	ui->defaultFontSizeSb->setValue(n);
+}
+
+void SettingDlg::setFontK(double n)
+{
+	if(n<1 || n>2)n=1.625;
+	ui->paintFontK->setValue(n);
 }
 
 void SettingDlg::setTabSize(int n)
@@ -62,7 +80,10 @@ int SettingDlg::defaultFontSize() const
 {
 	return ui->defaultFontSizeSb->value();
 }
-
+double SettingDlg::fontK() const
+{
+	return ui->paintFontK->value();
+}
 int SettingDlg::tabSize() const
 {
 	return ui->tabSizeSb->value();
@@ -87,7 +108,7 @@ int SettingDlg::spaceStyle() const
 		return 1;
 	}
 }
-
-
-
-
+int SettingDlg::codeStyle() const
+{
+	return ui->codeStyleCB->currentIndex();
+}

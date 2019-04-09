@@ -4,7 +4,7 @@
 #include <QTextStream>
 #include <QApplication>
 #include <QClipboard>
-
+#include <QTextCodec>
 #include <QDebug>
 
 //! add a node after "nodep", with "source"(see Data::Node)
@@ -189,6 +189,22 @@ Data::~Data()
 	}
 }
 
+int Data::getCodeStyle() const
+{
+	return codeStyle;
+}
+
+void Data::setCodeStyle(int style)
+{
+	if(style >=0 && style < 3)
+	{
+		codeStyle = style;
+	}else
+	{
+		codeStyle = 0;
+	}
+}
+
 //! return the first node's first heap's first char's iterator
 Data::iterator Data::begin()
 {
@@ -259,6 +275,7 @@ Data::Node & Data::operator[](int n)
 {
 	if (n >= nodeNum() || n < 0){
 		qDebug() << "Data::operator[]::index overflow";
+		return *firstNode;
 	} else {//n is legal
 		auto p = firstNode;
 		while (n){
@@ -543,6 +560,7 @@ Data::iterator Data::undo(const iterator &now)
 	} else {//undo stack is empty
 		return now;
 	}
+	return now;
 }
 
 //! if redo stack is empty return now
@@ -567,6 +585,7 @@ Data::iterator Data::redo(const Data::iterator &now)
 	} else {//redo stack is empty
 		return now;
 	}
+	return now;
 }
 
 //! delete all data and undoStack and redoStack
@@ -639,11 +658,21 @@ void Data::save(const QString &pathAndName)
 	}
 
 	QTextStream out(&file);
-
+	switch(codeStyle)
+	{
+	case 0:
+		break;
+	case 1:
+		out.setCodec(QTextCodec::codecForName("UTF-8"));
+		break;
+	default:
+		break;
+	}
 	auto i = begin();
+	auto e = end();
 	i.clear();
 	while (i){
-		if (i == end()){//ignore the last \n
+		if (i == e){//ignore the last \n
 			break;
 		}
 		out << *i;
@@ -663,10 +692,19 @@ void Data::read(const QString &pathAndName)
 	}
 
 	QTextStream in(&file);
-
+	switch(codeStyle)
+	{
+	case 0:
+		break;
+	case 1:
+		in.setCodec(QTextCodec::codecForName("UTF-8"));
+		break;
+	default:
+		break;
+	}
 	QString buf;
 	while (!in.atEnd()){
-		buf = in.read(100);
+		buf = in.readAll();
 		add(end(), buf);
 	}
 
@@ -931,6 +969,7 @@ Data::Heap & Data::Node::operator[](int n)
 {
 	if (n > heapNum() - 1){//not in this node
 		qDebug() << "Data::Node::operator[]::heap index overflow";
+		return *firstHeap;
 	} else {//in this node
 		auto heap = firstHeap;
 		while (n){
@@ -992,6 +1031,7 @@ QChar Data::Heap::operator[](int n) const
 {
 	if (n > charNum - 1){//not in this heap
 		qDebug() << "Data::Heap::operator[]::index overflow";
+		return '0';
 	} else {//in this heap
 		return ch[n];
 	}
@@ -1002,6 +1042,7 @@ QChar Data::Heap::operator[](int n) const
 QChar & Data::Heap::operator[](int n){
 	if (n > charNum - 1){//not in this heap
 		qDebug() << "Data::Heap::operator[]::index overflow";
+		return ch[0];
 	} else {//in this heap
 		return ch[n];
 	}

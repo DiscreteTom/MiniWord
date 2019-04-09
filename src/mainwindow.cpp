@@ -10,6 +10,8 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QDateTime>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include <QDebug>
 
 const int FirstQCharX = 30;
@@ -38,7 +40,24 @@ MainWindow::MainWindow(QWidget *parent) :
 	settingsDlg = new SettingDlg(this);
 	charnumDlg = new CharNumDlg(this);
 	helpDlg  = new HelpDialog(this);
+
+	settingsDlg->setMaxUndoTime(20);
+	settingsDlg->setFontSize(20);
+	settingsDlg->setFontSize(1);
+	FontSizeW = 8;
+	FontSizeH = 16;
+	settingsDlg->setFontK(1.625);
+	paintFontK = 1.625;
+	settingsDlg->setSpaceStyle(1);
+	SpaceStyle = 0;
+	settingsDlg->setTabSize(8);
+	TabWidth = 8;
+	settingsDlg->setTabStyle(1);
+	TabStyle = 0;
+	settingsDlg->setCodeStyle(0);
+	data.setCodeStyle(0);
 	getConfig();
+
 	data.resetStackSize(settingsDlg->maxUndoTime());
 	connect(replaceDlg,SIGNAL(FindNext()),this,SLOT(on_action_FindNext_triggered()));
 	connect(replaceDlg,SIGNAL(Replace()),this,SLOT(data_replace()));
@@ -212,11 +231,20 @@ void MainWindow::setConfig() const
 	}
 	QTextStream out(&file);
 
-	out << settingsDlg->maxUndoTime() << endl;
-	out << settingsDlg->defaultFontSize() << endl;
-	out << settingsDlg->spaceStyle() << endl;
-	out << settingsDlg->tabSize() << endl;
-	out << settingsDlg->tabStyle() << endl;
+	QJsonObject s;
+	s.insert("maxUndoTime", settingsDlg->maxUndoTime());
+	s.insert("defaultFontSize", settingsDlg->maxUndoTime());
+	s.insert("fontSizeK", settingsDlg->fontK());
+	s.insert("spaceStyle", settingsDlg->spaceStyle());
+	s.insert("tabSize", settingsDlg->tabSize());
+	s.insert("tabStyle", settingsDlg->tabStyle());
+	s.insert("codeStyle", settingsDlg->codeStyle());
+
+	QJsonDocument jsD;
+	jsD.setObject(s);
+
+
+	out << jsD.toJson() << endl;
 
 	file.close();
 }
@@ -231,41 +259,68 @@ void MainWindow::getConfig()
 	QFile file(qApp->applicationDirPath()+QString("/MiniWordConfig"));
 	if (!file.open(QFile::ReadOnly | QFile::Text)){
 		//qDebug() << "Mainwindow::getConfig::can not open file";
-
-		settingsDlg->setMaxUndoTime(20);
-		settingsDlg->setFontSize(20);
-		settingsDlg->setFontSize(1);
-		FontSizeW = 10;
-		FontSizeH = 16;
-		settingsDlg->setSpaceStyle(1);
-		SpaceStyle = 0;
-		settingsDlg->setTabSize(8);
-		TabWidth = 8;
-		settingsDlg->setTabStyle(1);
-		TabStyle = 0;
 		return;
 	}
 	QTextStream in(&file);
+	QString str;
+	QJsonDocument jsD;
+	QJsonObject js;
 
-	int n;
-	in >> n;
-	if(n < 20)n = 20;
-	settingsDlg->setMaxUndoTime(n);
-	in >> n;
-	if(n<1||n>9)n = 1;
-	settingsDlg->setFontSize(n);
-	FontSizeW = (n + 1) * 4;
-	FontSizeH = FontSizeW * 2;
-	in >> n;
-	settingsDlg->setSpaceStyle(n);
-	SpaceStyle = n;
-	in >> n;
-	if(n<2||n>16)n = 8;
-	settingsDlg->setTabSize(n);
-	TabWidth = n;
-	in >> n;
-	settingsDlg->setTabStyle(n);
-	TabStyle = n;
+	str = in.readAll();
+	jsD = QJsonDocument::fromJson(str.toLocal8Bit());
+	if(!jsD.isObject())return;
+	js = jsD.object();
+
+	if(js.contains("maxUndoTime"))
+	{
+		int n = js.take("maxUndoTime").toInt();
+		if(n < 20)n = 20;
+		settingsDlg->setMaxUndoTime(n);
+	}
+
+	if(js.contains("defaultFontSize"))
+	{
+		int n =  js.take("defaultFontSize").toInt();
+		if(n<1||n>9)n = 1;
+		settingsDlg->setFontSize(n);
+		FontSizeW = (n + 1) * 4;
+		FontSizeH = FontSizeW * 2;
+	}
+
+	if(js.contains("fontSizeK"))
+	{
+		double n = js.take("fontSizeK").toDouble();
+		settingsDlg->setFontK(n);
+		paintFontK = n;
+	}
+
+	if(js.contains("spaceStyle"))
+	{
+		int n =  js.take("spaceStyle").toInt();
+		settingsDlg->setSpaceStyle(n);
+		SpaceStyle = n;
+	}
+
+	if(js.contains("tabSize"))
+	{
+		int n = js.take("tabSize").toInt();
+		settingsDlg->setTabSize(n);
+		TabWidth = n;
+	}
+
+	if(js.contains("tabStyle"))
+	{
+		int n = js.take("tabStyle").toInt();
+		settingsDlg->setTabStyle(n);
+		TabStyle = n;
+	}
+
+	if(js.contains("codeStyle"))
+	{
+		int n = js.take("codeStyle").toInt();
+		settingsDlg->setCodeStyle(n);
+		data.setCodeStyle(n);
+	}
 
 	file.close();
 }
@@ -530,7 +585,9 @@ void MainWindow::keyPressEvent(QKeyEvent * ev)
 		ProtectedUpdate();
         break;
     case Qt::Key_End :
-		LocateLeftUpCursor(DataTextHeight-1);
+		//LocateLeftUpCursor(DataTextHeight-1);
+		LocateCursor(TextBoxWidth,PosCur.ShowPosY);
+		PosPre = PosCur;
 		ProtectedUpdate();
         break;
 	case Qt::Key_Shift:
@@ -639,7 +696,7 @@ void MainWindow::mousePressEvent(QMouseEvent * event)
 	}
 }
 
-void MainWindow::mouseReleaseEvent(QMouseEvent *ev)
+void MainWindow::mouseReleaseEvent(QMouseEvent*)
 {
 	IsDragged = false;
 }
@@ -727,7 +784,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 	ProtectedUpdate();
 }
 
-void MainWindow::paintEvent(QPaintEvent *ev)
+void MainWindow::paintEvent(QPaintEvent *)
 {
 	QPainter MyPainter(this);                                           //A Painter
 	MyPainter.setFont(QFont("楷体",8));
@@ -879,7 +936,7 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 	auto i=PosLeftUp.DataPos;
 	int ParaCounter = DataParaTop+1;
 	i.clear();
-	MyPainter.setFont(QFont("楷体",FontSizeW*10/6));
+	MyPainter.setFont(QFont("楷体",FontSizeW*paintFontK));
 	MyPainter.setPen(Qt::black);
 	if(PosCur.ShowPosY<0&&PosPre.ShowPosY>=0)MyPainter.setPen(Qt::white);
 	if(PosPre.ShowPosY<0&&PosCur.ShowPosY>=0)MyPainter.setPen(Qt::white);
@@ -945,7 +1002,7 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 				DrawX=0;
 				DrawY++;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(DrawX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1011,7 +1068,7 @@ void MainWindow::paintEvent(QPaintEvent *ev)
 		int len = FontSizeW*InputPreStr.length()+7;
 		int start = PosCur.ShowPosX-1;
 		if(start+len>TextBoxWidth)start = TextBoxWidth-len;
-		MyPainter.setFont(QFont("楷体",FontSizeW*10/6));
+		MyPainter.setFont(QFont("楷体",FontSizeW*paintFontK));
 		MyPainter.setPen(Qt::black);
 		MyPainter.drawRect(start+FirstQCharX,FontSizeH*PosCur.ShowPosY+FirstQCharY,
 						   len,FontSizeH+2);
@@ -1390,7 +1447,7 @@ void MainWindow::LocateCursor(int x,int y)
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1438,7 +1495,7 @@ void MainWindow::LocateCursor(int x,int y)
 				MoveX=(1+MoveX/(FontSizeW*TabWidth))*FontSizeW*TabWidth;
 				i++;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(MoveX+FontSizeW*2 < x)
 			{
@@ -1529,7 +1586,7 @@ void MainWindow:: LocateLeftUpCursor(int newDataTextTop,int flag)
 				MoveY++;
 				PosLeftUp.DataPos = i;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1598,7 +1655,7 @@ void MainWindow::FillBlueArea(Pos&pos1,Pos&pos2,QPainter*painter)
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1674,7 +1731,7 @@ void MainWindow::GetDataHeight()
 				MoveX=0;
 				MoveY++;
 			}
-		}else if((*i).unicode()>=0x1000&&(*i).unicode()<=0xffff)
+		}else if((*i).unicode()>=0x1000)
 		{
 			if(MoveX+FontSizeW*2<TextBoxWidth)
 			{
@@ -1790,6 +1847,12 @@ void MainWindow::on_action_Setting_triggered()
 		TabWidth = settingsDlg->tabSize();
 		TabStyle = settingsDlg->tabStyle();
 		ChangeFontSize((settingsDlg->defaultFontSize() + 1) * 4);
+		paintFontK = settingsDlg->fontK();
+		if(settingsDlg->codeStyle() != data.getCodeStyle())
+		{
+			data.setCodeStyle(settingsDlg->codeStyle());
+			if(!isUntitled)openFile(curFile);
+		}
 		ProtectedUpdate();
 	}else getConfig();
 }
@@ -1800,6 +1863,7 @@ void MainWindow::on_action_GetCharNum_triggered()
 	auto it_end = data.end();
 	int All_num = 0,Chinese_char_num = 0,English_char_num = 0,Para_num = 1,Number_num = 0,Other_num = 0;
 	if(PosCur.DataPos != PosPre.DataPos)
+	{
 		if(PosCur.ShowPosX+TextBoxWidth*PosCur.ShowPosY<PosPre.ShowPosX+TextBoxWidth*PosPre.ShowPosY)
 		{
 			it_begin = PosCur.DataPos;
@@ -1809,6 +1873,7 @@ void MainWindow::on_action_GetCharNum_triggered()
 			it_begin = PosPre.DataPos;
 			it_end = PosCur.DataPos;
 		}
+	}
 	while(it_begin != it_end)
 	{
 		All_num++;

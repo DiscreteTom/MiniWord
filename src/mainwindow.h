@@ -125,6 +125,7 @@ private:
 	int TextBoxWidth;						//文本框顶部
 	int FontSizeW;							//字体宽度
 	int FontSizeH;							//字体高度
+	double paintFontK;					//字体适配比例
 	int SpaceStyle;							//空格样式
 	int TabWidth;							//Tab宽度
 	int TabStyle;							//Tab样式
@@ -176,11 +177,11 @@ protected:
     void keyPressEvent(QKeyEvent * ev);
     void inputMethodEvent(QInputMethodEvent * ev);
     void mousePressEvent(QMouseEvent * ev);
-	void mouseReleaseEvent(QMouseEvent * ev);
+	void mouseReleaseEvent(QMouseEvent*);
 	void mouseDoubleClickEvent(QMouseEvent * ev);
 	void mouseMoveEvent(QMouseEvent * ev);
 	void wheelEvent(QWheelEvent *ev);
-    void paintEvent(QPaintEvent * ev);
+	void paintEvent(QPaintEvent*);
 public:
 	bool openFile(const QString & path);
 };
