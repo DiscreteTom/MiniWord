@@ -2,6 +2,8 @@
 
 V1.0
 
+感谢[@WhiteCambur](https://github.com/whitecambur)负责前端界面的开发
+
 ![](img/readme.png)
 
 ## Requirement
